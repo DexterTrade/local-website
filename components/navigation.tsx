@@ -45,8 +45,15 @@ export function Navigation() {
           {/* Right side actions */}
           <div className="flex items-center gap-4">
             {/* <ThemeToggle /> */}
-            <Button className="hidden sm:inline-flex" size="sm">
-              Get Quote
+            <Button className="hidden sm:inline-flex rounded-2xl" size="sm"
+            onClick={() =>
+												window.open(
+													"https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
+													"_blank"
+												)
+											}
+            >
+              Book Now
             </Button>
 
             {/* Mobile menu button */}

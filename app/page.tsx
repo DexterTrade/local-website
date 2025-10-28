@@ -1,3 +1,4 @@
+"use client";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import {
 	Zap,
 	TrendingUp,
 	Users,
+	Ban,
 } from "lucide-react";
 import LiquidEther from "@/components/effects/LiquidEtherBg";
 import Magnet from "@/components/effects/MagnetResolver";
@@ -19,6 +21,9 @@ import TextType from "@/components/effects/TextTyping";
 import LogoLoop from "@/components/effects/FlagLoop";
 import ReactCountryFlag from "react-country-flag";
 import LightRays from "@/components/effects/SpotlightBackgroung";
+import { motion } from "framer-motion";
+import CurvedLoop from "@/components/effects/TextLoop";
+import AlertStrip from "@/components/alert-strip";
 
 const countryCodes = [
 	"US",
@@ -52,6 +57,12 @@ export default function Home() {
 			title: "Freight Forwarding",
 			description:
 				"Seamless international freight forwarding with customs clearance and documentation support.",
+		},
+		{
+			icon: Ban,
+			title: "Customs Clearence",
+			description:
+				"Expert customs clearance services ensuring smooth, compliant, and hassle-free processing of international shipments.",
 		},
 	];
 
@@ -144,6 +155,7 @@ export default function Home() {
 
 	return (
 		<>
+			<AlertStrip />
 			<Navigation />
 			<main>
 				{/* Hero Section */}
@@ -219,8 +231,14 @@ export default function Home() {
 											size="lg"
 											variant="secondary"
 											className="rounded-2xl"
+											onClick={() =>
+												window.open(
+													"https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
+													"_blank"
+												)
+											}
 										>
-											Get a Quote
+											Book Now
 										</Button>
 									</Magnet>
 									<Button
@@ -237,7 +255,7 @@ export default function Home() {
 									<img
 										src="/banner-image-2.jpeg" // 👈 Replace with your image path
 										alt="Global logistics illustration"
-										className=" w-full h-full opacity-40"
+										className=" w-full h-full opacity-40 rounded-2xl"
 										// style={{ filter: "grayscale(1)" }}
 									/>
 								</div>
@@ -263,9 +281,10 @@ export default function Home() {
 				{/* Services Section */}
 				<section
 					id="services"
-					className="py-16 md:py-24 bg-background"
+					className="relative py-16 md:py-24 bg-background overflow-hidden"
 				>
-					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+					{/* === Section Content === */}
+					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
 						<div className="text-center mb-12">
 							<h2 className="text-3xl md:text-4xl font-bold mb-4">
 								Our Services
@@ -275,13 +294,14 @@ export default function Home() {
 								your shipping needs
 							</p>
 						</div>
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+						<div className="grid grid-cols-1 md:grid-cols-4 gap-9">
 							{services.map((service, index) => {
 								const Icon = service.icon;
 								return (
 									<Card
 										key={index}
-										className="p-8 hover:shadow-lg transition-shadow"
+										className="p-8 hover:shadow-lg transition-shadow rounded-2xl"
 									>
 										<Icon className="h-12 w-12 text-primary mb-4" />
 										<h3 className="text-xl font-semibold mb-3">
@@ -295,6 +315,18 @@ export default function Home() {
 							})}
 						</div>
 					</div>
+
+					{/* === Curved Marquee Loop (Bottom Positioned) ===
+					<div className="absolute bottom-0 left-0 w-full">
+						<CurvedLoop
+							marqueeText="Be ✦ Creative ✦ With ✦ React ✦ Bits ✦"
+							speed={3}
+							curveAmount={0}
+							direction="right"
+							interactive={true}
+							className="fill-primary/80"
+						/>
+					</div> */}
 				</section>
 
 				{/* Why Dexter Section */}
@@ -318,7 +350,7 @@ export default function Home() {
 								return (
 									<div
 										key={index}
-										className="bg-background rounded-lg p-8 hover:shadow-md transition-shadow"
+										className="bg-background p-8 hover:shadow-md transition-shadow rounded-2xl"
 									>
 										<div className="flex items-start gap-4">
 											<div className="bg-accent/10 p-3 rounded-lg flex-shrink-0">
@@ -359,7 +391,7 @@ export default function Home() {
 							{destinations.map((dest, index) => (
 								<Card
 									key={index}
-									className="p-6 text-center hover:shadow-lg transition-shadow"
+									className="p-6 text-center hover:shadow-lg transition-shadow rounded-2xl"
 								>
 									<div className="text-4xl mb-3">
 										{dest.flag}
@@ -388,7 +420,7 @@ export default function Home() {
 							{testimonials.map((testimonial, index) => (
 								<Card
 									key={index}
-									className="p-8 bg-background"
+									className="p-8 bg-background rounded-2xl"
 								>
 									<div className="flex gap-1 mb-4">
 										{[...Array(testimonial.rating)].map(
@@ -420,7 +452,6 @@ export default function Home() {
 				</section>
 
 				{/* CTA Section */}
-				{/* CTA Section */}
 				<section
 					id="contact"
 					className="py-16 md:py-24 bg-card text-foreground/90"
@@ -433,17 +464,17 @@ export default function Home() {
 							Get a free quote today and experience hassle-free
 							international shipping with Dexter Logistics.
 						</p>
-						<div className="flex flex-col sm:flex-row gap-4 justify-center">
-							<Button
-								size="lg"
-								variant="secondary"
-							>
-								Request a Quote
-							</Button>
+						<div className="flex flex-col sm:flex-row justify-center">
 							<Button
 								size="lg"
 								variant="outline"
 								className="border-foreground/40 text-foreground hover:bg-foreground/10 bg-transparent"
+								onClick={() =>
+									window.open(
+										"https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
+										"_blank"
+									)
+								}
 							>
 								Contact Us
 							</Button>
