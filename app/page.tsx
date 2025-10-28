@@ -16,6 +16,21 @@ import {
 import LiquidEther from "@/components/effects/LiquidEtherBg";
 import Magnet from "@/components/effects/MagnetResolver";
 import TextType from "@/components/effects/TextTyping";
+import LogoLoop from "@/components/effects/FlagLoop";
+import ReactCountryFlag from "react-country-flag";
+
+const countryCodes = [
+	"US",
+	"GB",
+	"FR",
+	"DE",
+	"IN",
+	"JP",
+	"CN",
+	"ZA",
+	"BR",
+	"CA",
+];
 
 export default function Home() {
 	const services = [
@@ -110,6 +125,22 @@ export default function Home() {
 		},
 	];
 
+	const techLogos = countryCodes.map((code) => ({
+		node: (
+			<ReactCountryFlag
+				countryCode={code}
+				svg
+				style={{
+					fontSize: "1.5em",
+					borderRadius: "1px",
+					boxShadow: "0 0 8px rgba(0,0,0,0.15)",
+					filter: "grayscale(1)", // 👈 removes color
+				}}
+				title={code}
+			/>
+		),
+	}));
+
 	return (
 		<>
 			<Navigation />
@@ -145,16 +176,16 @@ export default function Home() {
 							<div>
 								<h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight text-balance">
 									{/* Global Logistics Made Simple */}
-								<TextType
-									text={[
-										"Global Logistics Made Simple",
-										"Global Logistics Made Simple",
-									]}
-									typingSpeed={75}
-									pauseDuration={1500}
-									showCursor={true}
-									cursorCharacter="|"
-								/>
+									<TextType
+										text={[
+											"Global Logistics Made Simple",
+											"Global Logistics Made Simple",
+										]}
+										typingSpeed={75}
+										pauseDuration={1500}
+										showCursor={true}
+										cursorCharacter="|"
+									/>
 								</h1>
 
 								<p className="text-lg opacity-90 mb-8 leading-relaxed">
@@ -190,10 +221,29 @@ export default function Home() {
 							</div>
 							<div className="hidden md:block">
 								<div className="bg-primary-foreground/10 rounded-lg h-96 flex items-center justify-center">
-									<Globe className="h-48 w-48 opacity-20" />
+									<img
+										src="/banner-image.jpeg" // 👈 Replace with your image path
+										alt="Global logistics illustration"
+										className="object-cover w-full h-full opacity-40"
+										style={{ filter: "grayscale(1)" }}
+									/>
 								</div>
 							</div>
 						</div>
+					</div>
+					<div className="absolute bottom-0 left-0 w-full z-20 bg-transparent">
+						<LogoLoop
+							logos={techLogos}
+							speed={120}
+							direction="left"
+							logoHeight={48}
+							gap={40}
+							pauseOnHover
+							scaleOnHover
+							fadeOut={false}
+							fadeOutColor="#ffffff"
+							ariaLabel="Country flags slider"
+						/>
 					</div>
 				</section>
 
@@ -357,15 +407,16 @@ export default function Home() {
 				</section>
 
 				{/* CTA Section */}
+				{/* CTA Section */}
 				<section
 					id="contact"
-					className="py-16 md:py-24 text-primary-foreground"
+					className="py-16 md:py-24 bg-card text-foreground/90"
 				>
 					<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-						<h2 className="text-3xl md:text-4xl font-bold mb-6">
+						<h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
 							Ready to Ship Globally?
 						</h2>
-						<p className="text-lg opacity-90 mb-8">
+						<p className="text-lg text-foreground/70 mb-8">
 							Get a free quote today and experience hassle-free
 							international shipping with Dexter Logistics.
 						</p>
@@ -379,7 +430,7 @@ export default function Home() {
 							<Button
 								size="lg"
 								variant="outline"
-								className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10 bg-transparent"
+								className="border-foreground/40 text-foreground hover:bg-foreground/10 bg-transparent"
 							>
 								Contact Us
 							</Button>
