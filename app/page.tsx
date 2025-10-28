@@ -18,6 +18,7 @@ import Magnet from "@/components/effects/MagnetResolver";
 import TextType from "@/components/effects/TextTyping";
 import LogoLoop from "@/components/effects/FlagLoop";
 import ReactCountryFlag from "react-country-flag";
+import LightRays from "@/components/effects/SpotlightBackgroung";
 
 const countryCodes = [
 	"US",
@@ -134,7 +135,7 @@ export default function Home() {
 					fontSize: "1.5em",
 					borderRadius: "1px",
 					boxShadow: "0 0 8px rgba(0,0,0,0.15)",
-					filter: "grayscale(1)", // 👈 removes color
+					// filter: "grayscale(1)", // 👈 removes color
 				}}
 				title={code}
 			/>
@@ -152,7 +153,7 @@ export default function Home() {
 				>
 					{/* LiquidEther as background */}
 					<div className="absolute inset-0 -z-10">
-						<LiquidEther
+						{/* <LiquidEther
 							colors={["#FF7E29", "#FFD79E", "#FOA3BE"]}
 							mouseForce={20}
 							cursorSize={100}
@@ -168,6 +169,18 @@ export default function Home() {
 							takeoverDuration={0.25}
 							autoResumeDelay={3000}
 							autoRampDuration={0.6}
+						/> */}
+						<LightRays
+							raysOrigin="top-center"
+							raysColor="#00ffff"
+							raysSpeed={1.5}
+							lightSpread={0.8}
+							rayLength={1.2}
+							followMouse={true}
+							mouseInfluence={0.1}
+							noiseAmount={0.1}
+							distortion={0.05}
+							className="custom-rays"
 						/>
 					</div>
 
@@ -178,11 +191,11 @@ export default function Home() {
 									{/* Global Logistics Made Simple */}
 									<TextType
 										text={[
-											"Global Logistics Made Simple",
-											"Global Logistics Made Simple",
+											"Global Logistics Made Simple!",
+											"Global Logistics Made Simple!",
 										]}
-										typingSpeed={75}
-										pauseDuration={1500}
+										typingSpeed={95}
+										pauseDuration={3500}
 										showCursor={true}
 										cursorCharacter="|"
 									/>
@@ -222,10 +235,10 @@ export default function Home() {
 							<div className="hidden md:block">
 								<div className="bg-primary-foreground/10 rounded-lg h-96 flex items-center justify-center">
 									<img
-										src="/banner-image.jpeg" // 👈 Replace with your image path
+										src="/banner-image-2.jpeg" // 👈 Replace with your image path
 										alt="Global logistics illustration"
-										className="object-cover w-full h-full opacity-40"
-										style={{ filter: "grayscale(1)" }}
+										className=" w-full h-full opacity-40"
+										// style={{ filter: "grayscale(1)" }}
 									/>
 								</div>
 							</div>
