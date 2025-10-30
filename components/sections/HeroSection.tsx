@@ -31,7 +31,6 @@ export default function HeroSection() {
     <section id="home" className="relative py-20 md:py-32 overflow-hidden">
       {/* === Backgrounds === */}
       <div className="absolute inset-0 -z-10">
-        {/* Hero Image visible in all viewports */}
         <img
           src="/banner-image-2.jpeg"
           alt="Global logistics background"
@@ -53,7 +52,13 @@ export default function HeroSection() {
 
       {/* === Hero Content === */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div
+          className="
+            grid grid-cols-1 md:grid-cols-2 gap-12 items-center
+            pb-24 md:pb-0
+          "
+        >
+          {/* 👆 Added `pb-24 md:pb-0` to add space only on mobile */}
           <div>
             <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight text-white">
               <TextType

@@ -7,6 +7,7 @@ import WhyDexterSection from "@/components/sections/WhyDexterSection";
 import DestinationsSection from "@/components/sections/DestinationsSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import CTASection from "@/components/sections/CTASection";
+import FaqSection from "@/components/sections/FaqSection";
 
 export default function Home() {
   return (
@@ -20,6 +21,7 @@ export default function Home() {
         <DestinationsSection />
         <TestimonialsSection />
         <CTASection />
+	  <FaqSection />
       </main>
       <Footer />
     </>
