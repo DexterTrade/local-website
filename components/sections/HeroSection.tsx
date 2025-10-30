@@ -29,7 +29,15 @@ export default function HeroSection() {
 
   return (
     <section id="home" className="relative py-20 md:py-32 overflow-hidden">
+      {/* === Backgrounds === */}
       <div className="absolute inset-0 -z-10">
+        {/* Hero Image visible in all viewports */}
+        <img
+          src="/banner-image-2.jpeg"
+          alt="Global logistics background"
+          className="w-full h-full object-cover opacity-20 md:opacity-40"
+        />
+        <div className="absolute inset-0 bg-linear-to-b from-black/30 to-background/90" />
         <LightRays
           raysOrigin="top-center"
           raysColor="#00ffff"
@@ -43,10 +51,11 @@ export default function HeroSection() {
         />
       </div>
 
+      {/* === Hero Content === */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight text-white">
               <TextType
                 text={["Global Logistics Made Simple!"]}
                 typingSpeed={95}
@@ -55,10 +64,9 @@ export default function HeroSection() {
                 cursorCharacter="|"
               />
             </h1>
-
-            <p className="text-lg opacity-90 mb-8 leading-relaxed">
-              Dexter Logistics connects Pakistan to the world. From household goods
-              to commercial loads, we deliver with complete peace of mind.
+            <p className="text-lg text-white/90 mb-8 leading-relaxed">
+              Dexter Logistics connects Pakistan to the world. From household
+              goods to commercial loads, we deliver with complete peace of mind.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -80,25 +88,16 @@ export default function HeroSection() {
               <Button
                 size="lg"
                 variant="outline"
-                className="rounded-2xl border-secondary-foreground"
+                className="rounded-2xl border-white text-white hover:bg-white/10"
               >
                 Learn More
               </Button>
             </div>
           </div>
-
-          <div className="hidden md:block">
-            <div className="bg-primary-foreground/10 rounded-lg h-96 flex items-center justify-center">
-              <img
-                src="/banner-image-2.jpeg"
-                alt="Global logistics illustration"
-                className="w-full h-full opacity-40 rounded-2xl"
-              />
-            </div>
-          </div>
         </div>
       </div>
 
+      {/* === Flags Loop === */}
       <div className="absolute bottom-0 left-0 w-full z-20">
         <LogoLoop
           logos={techLogos}
