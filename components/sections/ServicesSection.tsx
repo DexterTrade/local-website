@@ -1,3 +1,4 @@
+"use client"
 import { Card } from "@/components/ui/card";
 import { Plane, Package, Globe, Ban } from "lucide-react";
 import { Metadata } from "next";
@@ -8,8 +9,16 @@ export const metadata: Metadata = {
     "Comprehensive logistics and freight services — air freight, cargo handling, and international forwarding.",
 };
 
-const services = [
-  { icon: Plane, title: "Air Freight", description: "Fast air cargo delivery." },
+
+export default function ServicesSection() {
+  // Smooth scroll for Air Freight → Destinations
+  const handleScroll = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const services = [
+  { icon: Plane, title: "Air Freight", description: "Fast air cargo delivery.", onClick: () => handleScroll("destinations"), customClass:"cursor-pointer"},
   { icon: Package, title: "Cargo Services", description: "Secure handling and tracking." },
   { icon: Globe, title: "Freight Forwarding", description: "Smooth customs support." },
   { icon: Ban, title: "Customs Clearance", description: "Compliant and hassle-free." },
@@ -20,7 +29,6 @@ const services = [
   },
 ];
 
-export default function ServicesSection() {
   return (
     <section id="services" className="py-16 md:py-24 bg-background">
       <div className="max-w-7xl mx-auto px-4 text-center mb-12">
@@ -48,7 +56,7 @@ export default function ServicesSection() {
 
           return (
             <div key={i} className="relative">
-              <Card className="p-8 h-full hover:shadow-lg transition rounded-2xl flex flex-col justify-between">
+              <Card onClick={s.onClick} className={"p-8 h-full hover:shadow-lg transition rounded-2xl flex flex-col justify-between "+ s.customClass} >
                 <div>
                   <Icon className="h-12 w-12 text-primary mb-4" />
                   <h3 className="text-xl font-semibold mb-3">{s.title}</h3>
