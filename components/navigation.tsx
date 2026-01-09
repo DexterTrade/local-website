@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "./theme-toggle";
 // import Logo from "@/public/logo.svg";
 import Image from "next/image";
 // import { ThemeToggle } from "./theme-toggle"
@@ -55,7 +56,7 @@ export function Navigation() {
 
 					{/* Right side actions */}
 					<div className="flex items-center gap-4">
-						{/* <ThemeToggle /> */}
+						<ThemeToggle />
 						<Button
 							className="hidden sm:inline-flex rounded-2xl"
 							size="sm"
