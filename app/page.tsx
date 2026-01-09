@@ -11,21 +11,21 @@ import CTASection from "@/components/sections/CTASection";
 import FaqSection from "@/components/sections/FaqSection";
 
 export default function Home() {
-  return (
-    <>
-      <AlertStrip />
-      <Navigation />
-      <main>
-        <HeroSection />
-        <ServicesSection />
-        <WhyDexterSection />
-        <DestinationsSection />
-        <SeaCargoSection />
-        <TestimonialsSection />
-        <CTASection />
-	  <FaqSection />
-      </main>
-      <Footer />
-    </>
-  );
+	return (
+		<>
+			<AlertStrip />
+			<Navigation />
+			<main>
+				<HeroSection />
+				<ServicesSection />
+				<WhyDexterSection />
+				<DestinationsSection />
+				<SeaCargoSection />
+				<TestimonialsSection />
+				<CTASection />
+				<FaqSection />
+			</main>
+			<Footer />
+		</>
+	);
 }

@@ -4,17 +4,17 @@ import { Package } from "lucide-react";
 const seaCargoFeatures = [
 	{
 		flag: "🇺🇸",
-		title: "Pakistan to USA",
+		title: "USA",
 		description: "Reliable sea freight routes with consistent transit times.",
 	},
 	{
 		flag: "🇬🇧",
-		title: "Pakistan to UK",
+		title: "UK",
 		description: "Secure ocean shipping with end-to-end coordination.",
 	},
 	{
 		flag: "🇦🇪",
-		title: "Pakistan to UAE",
+		title: "UAE",
 		description: "Efficient port handling and fast delivery windows.",
 	},
 	{
