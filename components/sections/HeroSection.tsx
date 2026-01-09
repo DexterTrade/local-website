@@ -21,7 +21,11 @@ export default function HeroSection() {
       <ReactCountryFlag
         countryCode={code}
         svg
-        style={{ fontSize: "1.5em", boxShadow: "0 0 8px rgba(0,0,0,0.15)" }}
+        style={{
+          fontSize: "1.5em",
+          boxShadow: "0 0 8px rgba(0,0,0,0.15)",
+          borderRadius: "15px",
+        }}
         title={code}
       />
     ),

@@ -29,7 +29,7 @@ export function Navigation() {
 						className="flex items-center gap-2"
 					>
 						<Image
-							src="/logo.svg"
+							src="/newLogo.svg"
 							alt="Dexter Logistics Logo"
 							width={80}
 							height={29}
