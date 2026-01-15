@@ -99,7 +99,7 @@ export default function HeroSection() {
                 variant="outline"
                 className="rounded-2xl border-foreground/40 text-foreground hover:bg-foreground/10 bg-transparent"
                 onClick={() => {
-                  const target = document.getElementById("contact");
+                  const target = document.getElementById("footer");
                   if (target) {
                     target.scrollIntoView({ behavior: "smooth", block: "start" });
                   }

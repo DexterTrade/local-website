@@ -2,7 +2,7 @@ import { Mail, Phone, MapPin } from "lucide-react";
 
 export function Footer() {
 	return (
-		<footer className="bg-card text-card-foreground border-t border-border/50">
+		<footer id="footer" className="bg-card text-card-foreground border-t border-border/50">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 				<div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
 					{/* Company Info */}
@@ -184,7 +184,7 @@ export function Footer() {
 				<div className="border-t border-border/40 pt-8">
 					<div className="flex flex-col md:flex-row justify-between items-center text-sm text-foreground/60">
 						<p>
-							&copy; 2025 Dexter Logistics and Couriers. All
+							&copy; {new Date().getFullYear()} Dexter Logistics and Couriers. All
 							rights reserved.
 						</p>
 						<div className="flex gap-6 mt-4 md:mt-0">
