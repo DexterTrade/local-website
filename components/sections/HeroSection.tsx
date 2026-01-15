@@ -79,7 +79,7 @@ export default function HeroSection() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Magnet padding={200} magnetStrength={1}>
+              {/* <Magnet padding={200} magnetStrength={1}> */}
                 <Button
                   size="lg"
                   variant="secondary"
@@ -93,11 +93,17 @@ export default function HeroSection() {
                 >
                   Book Now
                 </Button>
-              </Magnet>
+              {/* </Magnet> */}
               <Button
                 size="lg"
                 variant="outline"
-                className="rounded-2xl border-white text-white hover:bg-white/10"
+                className="rounded-2xl border-foreground/40 text-foreground hover:bg-foreground/10 bg-transparent"
+                onClick={() => {
+                  const target = document.getElementById("contact");
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}
               >
                 Learn More
               </Button>

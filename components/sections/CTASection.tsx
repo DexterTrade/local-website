@@ -54,7 +54,7 @@ const CTASection = () => {
 					<Button
 						size="lg"
 						variant="outline"
-						className="border-foreground/40 text-foreground hover:bg-foreground/10 bg-transparent"
+						className="rounded-2xl border-foreground/40 text-foreground hover:bg-foreground/10 bg-transparent"
 						onClick={() =>
 							window.open(
 								"https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
