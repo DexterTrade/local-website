@@ -2,6 +2,16 @@ import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Award, Users, Globe, TrendingUp } from "lucide-react"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "About Dexter Logistics",
+  description:
+    "Learn about Dexter Logistics, our mission, leadership team, and the global logistics expertise behind our cargo and freight services.",
+  alternates: {
+    canonical: "/about",
+  },
+}
 
 export default function About() {
   const stats = [

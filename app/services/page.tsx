@@ -3,6 +3,16 @@ import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Truck, Ship, Package, Warehouse, BarChart3, Clock } from "lucide-react"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Logistics Services | Dexter Logistics",
+  description:
+    "Air freight, sea freight, land transport, and warehousing services tailored for reliable global shipping and supply chain efficiency.",
+  alternates: {
+    canonical: "/services",
+  },
+}
 
 export default function Services() {
   const serviceDetails = [
