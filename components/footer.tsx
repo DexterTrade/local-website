@@ -1,4 +1,7 @@
+"use client";
+
 import { Mail, Phone, MapPin } from "lucide-react";
+import { getCookie, sendMetaEvent } from "@/lib/meta-client";
 
 export function Footer() {
 	return (
@@ -28,6 +31,20 @@ export function Footer() {
 								<a
 									href="#home"
 									className="hover:text-primary transition-colors"
+									onClick={() => {
+										void sendMetaEvent({
+											event_name: "ViewContent",
+											user_data: {
+												fbp: getCookie("_fbp"),
+												fbc: getCookie("_fbc"),
+											},
+											custom_data: {
+												content_type: "section",
+												content_name: "Home",
+												content_id: "#home",
+											},
+										});
+									}}
 								>
 									Home
 								</a>
@@ -36,6 +53,20 @@ export function Footer() {
 								<a
 									href="#services"
 									className="hover:text-primary transition-colors"
+									onClick={() => {
+										void sendMetaEvent({
+											event_name: "ViewContent",
+											user_data: {
+												fbp: getCookie("_fbp"),
+												fbc: getCookie("_fbc"),
+											},
+											custom_data: {
+												content_type: "section",
+												content_name: "Services",
+												content_id: "#services",
+											},
+										});
+									}}
 								>
 									Services
 								</a>
@@ -44,6 +75,20 @@ export function Footer() {
 								<a
 									href="#why-dexter"
 									className="hover:text-primary transition-colors"
+									onClick={() => {
+										void sendMetaEvent({
+											event_name: "ViewContent",
+											user_data: {
+												fbp: getCookie("_fbp"),
+												fbc: getCookie("_fbc"),
+											},
+											custom_data: {
+												content_type: "section",
+												content_name: "Why Dexter",
+												content_id: "#why-dexter",
+											},
+										});
+									}}
 								>
 									Why Dexter
 								</a>
@@ -52,6 +97,20 @@ export function Footer() {
 								<a
 									href="#destinations"
 									className="hover:text-primary transition-colors"
+									onClick={() => {
+										void sendMetaEvent({
+											event_name: "ViewContent",
+											user_data: {
+												fbp: getCookie("_fbp"),
+												fbc: getCookie("_fbc"),
+											},
+											custom_data: {
+												content_type: "section",
+												content_name: "Destinations",
+												content_id: "#destinations",
+											},
+										});
+									}}
 								>
 									Destinations
 								</a>
@@ -69,6 +128,20 @@ export function Footer() {
 								<a
 									href="#services"
 									className="hover:text-primary transition-colors"
+									onClick={() => {
+										void sendMetaEvent({
+											event_name: "ViewContent",
+											user_data: {
+												fbp: getCookie("_fbp"),
+												fbc: getCookie("_fbc"),
+											},
+											custom_data: {
+												content_type: "section",
+												content_name: "Air Freight",
+												content_id: "#services",
+											},
+										});
+									}}
 								>
 									Air Freight
 								</a>
@@ -77,6 +150,20 @@ export function Footer() {
 								<a
 									href="#services"
 									className="hover:text-primary transition-colors"
+									onClick={() => {
+										void sendMetaEvent({
+											event_name: "ViewContent",
+											user_data: {
+												fbp: getCookie("_fbp"),
+												fbc: getCookie("_fbc"),
+											},
+											custom_data: {
+												content_type: "section",
+												content_name: "Cargo Services",
+												content_id: "#services",
+											},
+										});
+									}}
 								>
 									Cargo Services
 								</a>
@@ -85,6 +172,20 @@ export function Footer() {
 								<a
 									href="#services"
 									className="hover:text-primary transition-colors"
+									onClick={() => {
+										void sendMetaEvent({
+											event_name: "ViewContent",
+											user_data: {
+												fbp: getCookie("_fbp"),
+												fbc: getCookie("_fbc"),
+											},
+											custom_data: {
+												content_type: "section",
+												content_name: "Freight Forwarding",
+												content_id: "#services",
+											},
+										});
+									}}
 								>
 									Freight Forwarding
 								</a>
@@ -93,6 +194,20 @@ export function Footer() {
 								<a
 									href="#services"
 									className="hover:text-primary transition-colors"
+									onClick={() => {
+										void sendMetaEvent({
+											event_name: "ViewContent",
+											user_data: {
+												fbp: getCookie("_fbp"),
+												fbc: getCookie("_fbc"),
+											},
+											custom_data: {
+												content_type: "section",
+												content_name: "DDP Service",
+												content_id: "#services",
+											},
+										});
+									}}
 								>
 									DDP Service
 								</a>
@@ -128,6 +243,19 @@ export function Footer() {
 										target="_blank"
 										rel="noreferrer"
 										className="hover:text-primary transition-colors"
+										onClick={() => {
+											void sendMetaEvent({
+												event_name: "Contact",
+												user_data: {
+													fbp: getCookie("_fbp"),
+													fbc: getCookie("_fbc"),
+												},
+												custom_data: {
+													channel: "whatsapp",
+													placement: "footer_pk",
+												},
+											});
+										}}
 									>
 										+92 (332) 6135002
 									</a>
@@ -149,6 +277,19 @@ export function Footer() {
 										target="_blank"
 										rel="noreferrer"
 										className="hover:text-primary transition-colors"
+										onClick={() => {
+											void sendMetaEvent({
+												event_name: "Contact",
+												user_data: {
+													fbp: getCookie("_fbp"),
+													fbc: getCookie("_fbc"),
+												},
+												custom_data: {
+													channel: "whatsapp",
+													placement: "footer_uk",
+												},
+											});
+										}}
 									>
 										+44 7404654725
 									</a>
@@ -164,6 +305,19 @@ export function Footer() {
 								<a
 									href="mailto:dextertradeltd@gmail.com"
 									className="hover:text-primary transition-colors"
+									onClick={() => {
+										void sendMetaEvent({
+											event_name: "Contact",
+											user_data: {
+												fbp: getCookie("_fbp"),
+												fbc: getCookie("_fbc"),
+											},
+											custom_data: {
+												channel: "email",
+												placement: "footer",
+											},
+										});
+									}}
 								>
 									dextercargologistics@gmail.com
 								</a>

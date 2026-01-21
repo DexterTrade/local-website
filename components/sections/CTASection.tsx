@@ -2,6 +2,7 @@
 
 import { Button } from "../ui/button";
 import { Metadata } from "next";
+import { getCookie, sendMetaEvent } from "@/lib/meta-client";
 
 export const metadata: Metadata = {
 	title: "Contact Dexter Logistics | Book a Shipment",
@@ -10,6 +11,20 @@ export const metadata: Metadata = {
 };
 
 const CTASection = () => {
+	const trackContactClick = async () => {
+		await sendMetaEvent({
+			event_name: "Contact",
+			user_data: {
+				fbp: getCookie("_fbp"),
+				fbc: getCookie("_fbc"),
+			},
+			custom_data: {
+				channel: "whatsapp",
+				placement: "cta_section",
+			},
+		});
+	};
+
 	return (
 		<section
 			id="contact"
@@ -37,6 +52,19 @@ const CTASection = () => {
 							target="_blank"
 							rel="noreferrer"
 							className="bg-background/90 text-foreground text-xs font-semibold px-3 py-2 rounded-full shadow-sm hover:bg-background"
+							onClick={() => {
+								void sendMetaEvent({
+									event_name: "FindLocation",
+									user_data: {
+										fbp: getCookie("_fbp"),
+										fbc: getCookie("_fbc"),
+									},
+									custom_data: {
+										placement: "cta_section",
+										action: "open_map",
+									},
+								});
+							}}
 						>
 							Open Map
 						</a>
@@ -45,6 +73,19 @@ const CTASection = () => {
 							target="_blank"
 							rel="noreferrer"
 							className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-2 rounded-full shadow-sm hover:opacity-90"
+							onClick={() => {
+								void sendMetaEvent({
+									event_name: "FindLocation",
+									user_data: {
+										fbp: getCookie("_fbp"),
+										fbc: getCookie("_fbc"),
+									},
+									custom_data: {
+										placement: "cta_section",
+										action: "directions",
+									},
+								});
+							}}
 						>
 							Directions
 						</a>
@@ -55,12 +96,13 @@ const CTASection = () => {
 						size="lg"
 						variant="outline"
 						className="rounded-2xl border-foreground/40 text-foreground hover:bg-foreground/10 bg-transparent"
-						onClick={() =>
+						onClick={() => {
+							void trackContactClick();
 							window.open(
 								"https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
 								"_blank"
-							)
-						}
+							);
+						}}
 					>
 						Contact Us
 					</Button>

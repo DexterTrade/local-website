@@ -1,5 +1,6 @@
 "use client";
 import { Megaphone } from "lucide-react";
+import { getCookie, sendMetaEvent } from "@/lib/meta-client";
 
 export default function AlertStrip() {
 	const numbers = ["0332-6135002", "0332-8884396"];
@@ -21,6 +22,19 @@ export default function AlertStrip() {
 						target="_blank"
 						rel="noreferrer"
 						className="hover:text-background transition-colors"
+						onClick={() => {
+							void sendMetaEvent({
+								event_name: "Contact",
+								user_data: {
+									fbp: getCookie("_fbp"),
+									fbc: getCookie("_fbc"),
+								},
+								custom_data: {
+									channel: "whatsapp",
+									placement: "alert_strip_desktop_left",
+								},
+							});
+						}}
 					>
 						{numbers[0]}
 					</a>
@@ -51,6 +65,19 @@ export default function AlertStrip() {
 						target="_blank"
 						rel="noreferrer"
 						className="hidden md:inline font-semibold hover:text-background transition-colors"
+						onClick={() => {
+							void sendMetaEvent({
+								event_name: "Contact",
+								user_data: {
+									fbp: getCookie("_fbp"),
+									fbc: getCookie("_fbc"),
+								},
+								custom_data: {
+									channel: "whatsapp",
+									placement: "alert_strip_desktop_right",
+								},
+							});
+						}}
 					>
 						{numbers[1]}
 					</a>
@@ -73,6 +100,19 @@ export default function AlertStrip() {
 						target="_blank"
 						rel="noreferrer"
 						className="hover:text-background transition-colors"
+						onClick={() => {
+							void sendMetaEvent({
+								event_name: "Contact",
+								user_data: {
+									fbp: getCookie("_fbp"),
+									fbc: getCookie("_fbc"),
+								},
+								custom_data: {
+									channel: "whatsapp",
+									placement: "alert_strip_mobile_left",
+								},
+							});
+						}}
 					>
 						{numbers[0]}
 					</a>
@@ -92,6 +132,19 @@ export default function AlertStrip() {
 						target="_blank"
 						rel="noreferrer"
 						className="hover:text-background transition-colors"
+						onClick={() => {
+							void sendMetaEvent({
+								event_name: "Contact",
+								user_data: {
+									fbp: getCookie("_fbp"),
+									fbc: getCookie("_fbc"),
+								},
+								custom_data: {
+									channel: "whatsapp",
+									placement: "alert_strip_mobile_right",
+								},
+							});
+						}}
 					>
 						{numbers[1]}
 					</a>

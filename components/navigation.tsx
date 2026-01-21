@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 // import Logo from "@/public/logo.svg";
 import Image from "next/image";
+import { getCookie, sendMetaEvent } from "@/lib/meta-client";
 // import { ThemeToggle } from "./theme-toggle"
 
 export function Navigation() {
@@ -48,6 +49,20 @@ export function Navigation() {
 								key={item.href}
 								href={item.href}
 								className="text-foreground hover:text-primary transition-colors text-sm font-medium"
+								onClick={() => {
+									void sendMetaEvent({
+										event_name: "ViewContent",
+										user_data: {
+											fbp: getCookie("_fbp"),
+											fbc: getCookie("_fbc"),
+										},
+										custom_data: {
+											content_type: "section",
+											content_name: item.label,
+											content_id: item.href,
+										},
+									});
+								}}
 							>
 								{item.label}
 							</a>
@@ -60,12 +75,23 @@ export function Navigation() {
 						<Button
 							className="hidden sm:inline-flex rounded-2xl"
 							size="sm"
-							onClick={() =>
+							onClick={() => {
+								void sendMetaEvent({
+									event_name: "Contact",
+									user_data: {
+										fbp: getCookie("_fbp"),
+										fbc: getCookie("_fbc"),
+									},
+									custom_data: {
+										channel: "whatsapp",
+										placement: "navigation",
+									},
+								});
 								window.open(
 									"https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
 									"_blank"
-								)
-							}
+								);
+							}}
 						>
 							Book Now
 						</Button>
@@ -93,12 +119,47 @@ export function Navigation() {
 								key={item.href}
 								href={item.href}
 								className="block px-4 py-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
-								onClick={() => setIsOpen(false)}
+								onClick={() => {
+									void sendMetaEvent({
+										event_name: "ViewContent",
+										user_data: {
+											fbp: getCookie("_fbp"),
+											fbc: getCookie("_fbc"),
+										},
+										custom_data: {
+											content_type: "section",
+											content_name: item.label,
+											content_id: item.href,
+										},
+									});
+									setIsOpen(false);
+								}}
 							>
 								{item.label}
 							</a>
 						))}
-						<Button className="w-full mt-4">Get Quote</Button>
+						<Button
+							className="w-full mt-4"
+							onClick={() => {
+								void sendMetaEvent({
+									event_name: "Contact",
+									user_data: {
+										fbp: getCookie("_fbp"),
+										fbc: getCookie("_fbc"),
+									},
+									custom_data: {
+										channel: "whatsapp",
+										placement: "navigation_mobile",
+									},
+								});
+								window.open(
+									"https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
+									"_blank"
+								);
+							}}
+						>
+							Get Quote
+						</Button>
 					</div>
 				)}
 			</div>

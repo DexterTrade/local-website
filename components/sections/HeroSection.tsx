@@ -6,6 +6,7 @@ import TextType from "@/components/effects/TextTyping";
 import LogoLoop from "@/components/effects/FlagLoop";
 import ReactCountryFlag from "react-country-flag";
 import { Metadata } from "next";
+import { getCookie, sendMetaEvent } from "@/lib/meta-client";
 
 export const metadata: Metadata = {
   title: "Global Logistics Made Simple | Dexter Logistics",
@@ -84,12 +85,23 @@ export default function HeroSection() {
                   size="lg"
                   variant="secondary"
                   className="rounded-2xl"
-                  onClick={() =>
+                  onClick={() => {
+                    void sendMetaEvent({
+                      event_name: "Contact",
+                      user_data: {
+                        fbp: getCookie("_fbp"),
+                        fbc: getCookie("_fbc"),
+                      },
+                      custom_data: {
+                        channel: "whatsapp",
+                        placement: "hero",
+                      },
+                    });
                     window.open(
                       "https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
                       "_blank"
-                    )
-                  }
+                    );
+                  }}
                 >
                   Book Now
                 </Button>
@@ -99,6 +111,17 @@ export default function HeroSection() {
                 variant="outline"
                 className="rounded-2xl border-foreground/40 text-foreground hover:bg-foreground/10 bg-transparent"
                 onClick={() => {
+                  void sendMetaEvent({
+                    event_name: "ViewContent",
+                    user_data: {
+                      fbp: getCookie("_fbp"),
+                      fbc: getCookie("_fbc"),
+                    },
+                    custom_data: {
+                      content_type: "section",
+                      content_name: "footer",
+                    },
+                  });
                   const target = document.getElementById("footer");
                   if (target) {
                     target.scrollIntoView({ behavior: "smooth", block: "start" });

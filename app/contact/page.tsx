@@ -8,6 +8,7 @@ import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Mail, Phone, MapPin, Clock } from "lucide-react"
+import { getCookie, sendMetaEvent } from "@/lib/meta-client"
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -22,6 +23,26 @@ export default function Contact() {
 
   const [submitted, setSubmitted] = useState(false)
 
+  const sendLeadEvent = async () => {
+    const payload = {
+      event_name: "Lead",
+      user_data: {
+        email: formData.email,
+        phone: formData.phone,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        fbp: getCookie("_fbp"),
+        fbc: getCookie("_fbc"),
+        external_id: formData.email,
+      },
+      custom_data: {
+        subject: formData.subject || undefined,
+        company: formData.company || undefined,
+      },
+    }
+    await sendMetaEvent(payload)
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -32,6 +53,7 @@ export default function Contact() {
     // Simulate form submission
     console.log("Form submitted:", formData)
     setSubmitted(true)
+    void sendLeadEvent()
     setTimeout(() => {
       setFormData({
         firstName: "",
