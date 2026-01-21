@@ -53,6 +53,31 @@ const buildUserData = (
   return payload;
 };
 
+const pickFirstHeader = (request: NextRequest, keys: string[]) => {
+  for (const key of keys) {
+    const value = request.headers.get(key);
+    if (value) return value;
+  }
+  return undefined;
+};
+
+const buildGeo = (request: NextRequest) => {
+  const geo: Record<string, string> = {};
+  const country = pickFirstHeader(request, ["x-vercel-ip-country", "cf-ipcountry"]);
+  const region = pickFirstHeader(request, ["x-vercel-ip-country-region", "cf-region"]);
+  const city = pickFirstHeader(request, ["x-vercel-ip-city", "cf-city"]);
+  const latitude = pickFirstHeader(request, ["x-vercel-ip-latitude", "cf-iplatitude"]);
+  const longitude = pickFirstHeader(request, ["x-vercel-ip-longitude", "cf-iplongitude"]);
+
+  if (country) geo.country = country;
+  if (region) geo.region = region;
+  if (city) geo.city = city;
+  if (latitude) geo.latitude = latitude;
+  if (longitude) geo.longitude = longitude;
+
+  return geo;
+};
+
 export async function POST(request: NextRequest) {
   const accessToken = process.env.META_ACCESS_TOKEN;
   const pixelId = process.env.META_PIXEL_ID ?? process.env.NEXT_PUBLIC_META_PIXEL_ID;
@@ -93,7 +118,14 @@ export async function POST(request: NextRequest) {
     event_source_url: payload.event_source_url,
     action_source: payload.action_source ?? "website",
     user_data: buildUserData(payload.user_data, ipAddress, userAgent),
-    custom_data: payload.custom_data,
+    custom_data: (() => {
+      const geo = buildGeo(request);
+      const customData = { ...(payload.custom_data ?? {}) } as Record<string, unknown>;
+      if (Object.keys(geo).length > 0 && !("geo" in customData)) {
+        customData.geo = geo;
+      }
+      return customData;
+    })(),
   };
 
   const response = await fetch(
