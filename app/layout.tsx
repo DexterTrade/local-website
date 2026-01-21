@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import Script from "next/script";
 import MetaPageEvents from "@/components/meta/page-events";
@@ -59,7 +59,9 @@ export default function RootLayout({
           defaultTheme="light"
           enableSystem={false}
         >
-          <MetaPageEvents />
+          <Suspense fallback={null}>
+            <MetaPageEvents />
+          </Suspense>
           {children}
           <WhatsAppFloatingButton />
         </ThemeProvider>
