@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import React from "react";
 import { Card } from "../ui/card";
 import { getCountryRates } from "@/lib/rates-store";
+import { DESTINATION_COUNTRIES } from "@/lib/destination-countries";
 
 export const metadata: Metadata = {
 	title: "Global Destinations | Dexter Logistics",
@@ -9,21 +10,10 @@ export const metadata: Metadata = {
 		"Ship from Pakistan to the UK, USA, UAE, Canada, and more — trusted international delivery.",
 };
 
-const destinations = [
-	{ country: "United Kingdom", flag: "🇬🇧" },
-	{ country: "United States", flag: "🇺🇸" },
-	{ country: "United Arab Emirates", flag: "🇦🇪" },
-	{ country: "Saudi Arabia", flag: "🇸🇦" },
-	{ country: "France", flag: "🇫🇷" },
-	{ country: "Canada", flag: "🇨🇦" },
-	{ country: "Germany", flag: "🇩🇪" },
-	{ country: "Netherlands", flag: "🇳🇱" },
-];
-
 const DestinationsSection = async () => {
 	const rates = await getCountryRates();
 	const ratesMap = new Map(rates.map((rate) => [rate.country, rate]));
-	const destinationsWithRates = destinations.map((destination) => ({
+	const destinationsWithRates = DESTINATION_COUNTRIES.map((destination) => ({
 		...destination,
 		rate: ratesMap.get(destination.country),
 	}));

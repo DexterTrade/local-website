@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { COUNTRIES } from "@/lib/countries";
+import { DESTINATION_COUNTRY_NAMES } from "@/lib/destination-countries";
 
 export type CountryRate = {
   country: string;
@@ -17,7 +17,7 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const RATES_FILE = path.join(DATA_DIR, "country-rates.json");
 
 const defaultRates = (): CountryRate[] =>
-  COUNTRIES.map((country) => ({
+  DESTINATION_COUNTRY_NAMES.map((country) => ({
     country,
     rate_per_kg: 0,
     rate_per_pound: 0,
@@ -26,7 +26,7 @@ const defaultRates = (): CountryRate[] =>
 
 const normalizeRates = (rates: CountryRate[]) => {
   const map = new Map(rates.map((rate) => [rate.country, rate]));
-  return COUNTRIES.map((country) => {
+  return DESTINATION_COUNTRY_NAMES.map((country) => {
     const rate = map.get(country);
     if (!rate) {
       return {
