@@ -7,6 +7,7 @@ import LogoLoop from "@/components/effects/FlagLoop";
 import ReactCountryFlag from "react-country-flag";
 import { Metadata } from "next";
 import { getCookie, sendMetaEvent } from "@/lib/meta-client";
+import { scrollToShippingForm } from "@/lib/scroll-to-shipping-form";
 
 export const metadata: Metadata = {
   title: "Global Logistics Made Simple | Dexter Logistics",
@@ -93,14 +94,12 @@ export default function HeroSection() {
                         fbc: getCookie("_fbc"),
                       },
                       custom_data: {
-                        channel: "whatsapp",
+                        channel: "website_form",
                         placement: "hero",
+                        action: "scroll_to_shipping_form",
                       },
                     });
-                    window.open(
-                      "https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
-                      "_blank"
-                    );
+                    scrollToShippingForm();
                   }}
                 >
                   Book Now

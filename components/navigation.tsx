@@ -8,6 +8,7 @@ import { ThemeToggle } from "./theme-toggle";
 // import Logo from "@/public/logo.svg";
 import Image from "next/image";
 import { getCookie, sendMetaEvent } from "@/lib/meta-client";
+import { scrollToShippingForm } from "@/lib/scroll-to-shipping-form";
 // import { ThemeToggle } from "./theme-toggle"
 
 export function Navigation() {
@@ -83,14 +84,12 @@ export function Navigation() {
 										fbc: getCookie("_fbc"),
 									},
 									custom_data: {
-										channel: "whatsapp",
+										channel: "website_form",
 										placement: "navigation",
+										action: "scroll_to_shipping_form",
 									},
 								});
-								window.open(
-									"https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
-									"_blank"
-								);
+								scrollToShippingForm();
 							}}
 						>
 							Book Now
@@ -148,14 +147,12 @@ export function Navigation() {
 										fbc: getCookie("_fbc"),
 									},
 									custom_data: {
-										channel: "whatsapp",
+										channel: "website_form",
 										placement: "navigation_mobile",
+										action: "scroll_to_shipping_form",
 									},
 								});
-								window.open(
-									"https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
-									"_blank"
-								);
+								scrollToShippingForm();
 							}}
 						>
 							Get Quote
