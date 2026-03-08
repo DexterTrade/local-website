@@ -4,49 +4,49 @@
       "country": "United Kingdom",
       "rate_per_kg": 5000,
       "rate_per_pound": 45.36,
-      "updated_at": "2026-03-08T11:51:10.910Z"
+      "updated_at": "2026-03-08T11:56:41.788Z"
     },
     {
       "country": "United States",
-      "rate_per_kg": 0,
+      "rate_per_kg": 6000,
       "rate_per_pound": 0,
-      "updated_at": "2026-03-08T11:51:10.910Z"
+      "updated_at": "2026-03-08T11:56:41.788Z"
     },
     {
       "country": "United Arab Emirates",
       "rate_per_kg": 0,
       "rate_per_pound": 0,
-      "updated_at": "2026-03-08T11:51:10.910Z"
+      "updated_at": "2026-03-08T11:56:41.788Z"
     },
     {
       "country": "Saudi Arabia",
       "rate_per_kg": 1000,
       "rate_per_pound": 453.59,
-      "updated_at": "2026-03-08T11:51:10.910Z"
+      "updated_at": "2026-03-08T11:56:41.788Z"
     },
     {
       "country": "France",
       "rate_per_kg": 0,
       "rate_per_pound": 0,
-      "updated_at": "2026-03-08T11:51:10.910Z"
+      "updated_at": "2026-03-08T11:56:41.788Z"
     },
     {
       "country": "Canada",
       "rate_per_kg": 0,
       "rate_per_pound": 0,
-      "updated_at": "2026-03-08T11:51:10.910Z"
+      "updated_at": "2026-03-08T11:56:41.788Z"
     },
     {
       "country": "Germany",
       "rate_per_kg": 0,
       "rate_per_pound": 0,
-      "updated_at": "2026-03-08T11:51:10.910Z"
+      "updated_at": "2026-03-08T11:56:41.788Z"
     },
     {
       "country": "Netherlands",
       "rate_per_kg": 0,
       "rate_per_pound": 0,
-      "updated_at": "2026-03-08T11:51:10.910Z"
+      "updated_at": "2026-03-08T11:56:41.788Z"
     }
   ]
 }

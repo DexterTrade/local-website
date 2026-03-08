@@ -13,8 +13,9 @@ type CountryRatesFile = {
   rates: CountryRate[];
 };
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const RATES_FILE = path.join(DATA_DIR, "country-rates.json");
+const PRIMARY_DATA_DIR = path.join(process.cwd(), "data");
+const FALLBACK_DATA_DIR = path.join("/tmp", "logistics-website-data");
+const RATES_FILENAME = "country-rates.json";
 
 const defaultRates = (): CountryRate[] =>
   DESTINATION_COUNTRY_NAMES.map((country) => ({
@@ -46,27 +47,61 @@ const normalizeRates = (rates: CountryRate[]) => {
   });
 };
 
-const ensureRatesFile = async () => {
-  await fs.mkdir(DATA_DIR, { recursive: true });
+let cachedRatesFilePath: string | null = null;
+
+const resolveRatesFilePath = async () => {
+  if (cachedRatesFilePath) return cachedRatesFilePath;
+
+  const envPath = process.env.RATES_FILE_PATH;
+  if (envPath) {
+    const envDir = path.dirname(envPath);
+    await fs.mkdir(envDir, { recursive: true });
+    cachedRatesFilePath = envPath;
+    return cachedRatesFilePath;
+  }
+
   try {
-    await fs.access(RATES_FILE);
+    await fs.mkdir(PRIMARY_DATA_DIR, { recursive: true });
+    cachedRatesFilePath = path.join(PRIMARY_DATA_DIR, RATES_FILENAME);
+    return cachedRatesFilePath;
+  } catch {
+    await fs.mkdir(FALLBACK_DATA_DIR, { recursive: true });
+    cachedRatesFilePath = path.join(FALLBACK_DATA_DIR, RATES_FILENAME);
+    return cachedRatesFilePath;
+  }
+};
+
+const ensureRatesFile = async () => {
+  const ratesFile = await resolveRatesFilePath();
+  try {
+    await fs.access(ratesFile);
   } catch {
     const payload: CountryRatesFile = { rates: defaultRates() };
-    await fs.writeFile(RATES_FILE, JSON.stringify(payload, null, 2), "utf8");
+    await fs.writeFile(ratesFile, JSON.stringify(payload, null, 2), "utf8");
   }
 };
 
 export const getCountryRates = async () => {
-  await ensureRatesFile();
-  const content = await fs.readFile(RATES_FILE, "utf8");
-  const parsed = JSON.parse(content) as CountryRatesFile;
-  return normalizeRates(parsed.rates ?? []);
+  try {
+    await ensureRatesFile();
+    const ratesFile = await resolveRatesFilePath();
+    const content = await fs.readFile(ratesFile, "utf8");
+    const parsed = JSON.parse(content) as CountryRatesFile;
+    return normalizeRates(parsed.rates ?? []);
+  } catch {
+    return defaultRates();
+  }
 };
 
 export const saveCountryRates = async (rates: CountryRate[]) => {
-  await ensureRatesFile();
   const normalized = normalizeRates(rates);
   const payload: CountryRatesFile = { rates: normalized };
-  await fs.writeFile(RATES_FILE, JSON.stringify(payload, null, 2), "utf8");
-  return normalized;
+  try {
+    await ensureRatesFile();
+    const ratesFile = await resolveRatesFilePath();
+    await fs.writeFile(ratesFile, JSON.stringify(payload, null, 2), "utf8");
+    return normalized;
+  } catch {
+    return normalized;
+  }
 };
