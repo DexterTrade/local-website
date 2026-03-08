@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import React from "react";
 import { Card } from "../ui/card";
+import { getCountryRates } from "@/lib/rates-store";
 
 export const metadata: Metadata = {
 	title: "Global Destinations | Dexter Logistics",
@@ -9,17 +10,24 @@ export const metadata: Metadata = {
 };
 
 const destinations = [
-	{ country: "United Kingdom", flag: "🇬🇧", price: 1500 },
-	{ country: "United States", flag: "🇺🇸", price: 2450 },
-	{ country: "United Arab Emirates", flag: "🇦🇪", price: 2450 },
-	{ country: "Saudi Arabia", flag: "🇸🇦", price: 2200 },
-	{ country: "France", flag: "🇫🇷", price: 2150 },
-	{ country: "Canada", flag: "🇨🇦", price: 2550 },
-	{ country: "Germany", flag: "🇩🇪", price: 2150 },
-	{ country: "Netherlands", flag: "🇳🇱", price: 2000 },
+	{ country: "United Kingdom", flag: "🇬🇧" },
+	{ country: "United States", flag: "🇺🇸" },
+	{ country: "United Arab Emirates", flag: "🇦🇪" },
+	{ country: "Saudi Arabia", flag: "🇸🇦" },
+	{ country: "France", flag: "🇫🇷" },
+	{ country: "Canada", flag: "🇨🇦" },
+	{ country: "Germany", flag: "🇩🇪" },
+	{ country: "Netherlands", flag: "🇳🇱" },
 ];
 
-const DestinationsSection = () => {
+const DestinationsSection = async () => {
+	const rates = await getCountryRates();
+	const ratesMap = new Map(rates.map((rate) => [rate.country, rate]));
+	const destinationsWithRates = destinations.map((destination) => ({
+		...destination,
+		rate: ratesMap.get(destination.country),
+	}));
+
 	return (
 		<section
 			id="destinations"
@@ -37,7 +45,7 @@ const DestinationsSection = () => {
 				</div>
 
 				<div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-					{destinations.map((dest, index) => (
+					{destinationsWithRates.map((dest, index) => (
 						<Card
 							key={index}
 							className="p-6 text-center hover:shadow-lg transition-shadow rounded-2xl"
@@ -47,12 +55,9 @@ const DestinationsSection = () => {
 								{dest.country}
 							</p>
 
-							{/* Show price only if available */}
-							{dest.price && (
-								<p className="text-sm text-primary font-medium">
-									₨{dest.price.toLocaleString()} / kg
-								</p>
-							)}
+							<p className="text-sm text-primary font-medium">
+								₨{(dest.rate?.rate_per_kg ?? 0).toLocaleString()} / kg
+							</p>
 						</Card>
 					))}
 				</div>

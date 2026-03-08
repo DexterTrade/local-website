@@ -22,6 +22,7 @@ const CTASection = () => {
 	const [destinationCountry, setDestinationCountry] = useState("");
 	const [shipmentWeight, setShipmentWeight] = useState("");
 	const [shipmentWeightUnit, setShipmentWeightUnit] = useState("kg");
+	const [cargoType, setCargoType] = useState("sea");
 	const [shipmentType, setShipmentType] = useState("Commercial");
 	const [nameError, setNameError] = useState("");
 	const [countryError, setCountryError] = useState("");
@@ -76,6 +77,7 @@ const CTASection = () => {
 			`\nFrom Country: ${fromCountry}` +
 			`\nDestination Country: ${destinationCountry}` +
 			`\nShipment Weight: ${shipmentWeight} ${shipmentWeightUnit}` +
+			`\nCargo Type: ${cargoType}` +
 			`\nShipment Type: ${shipmentType}`;
 
 		try {
@@ -96,6 +98,7 @@ const CTASection = () => {
 					destination_country: destinationCountry,
 					shipment_weight: shipmentWeight,
 					shipment_weight_unit: shipmentWeightUnit,
+					cargo_type: cargoType,
 					shipment_type: shipmentType,
 				},
 			});
@@ -221,6 +224,19 @@ const CTASection = () => {
 							>
 								<option value="kg">kg</option>
 								<option value="pounds">pounds</option>
+							</select>
+						</div>
+						<div className="space-y-2">
+							<Label htmlFor="cargo-type">Cargo Type</Label>
+							<select
+								id="cargo-type"
+								value={cargoType}
+								onChange={(e) => setCargoType(e.target.value)}
+								className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+								required
+							>
+								<option value="sea">Sea</option>
+								<option value="air">Air</option>
 							</select>
 						</div>
 						{countryError ? (
