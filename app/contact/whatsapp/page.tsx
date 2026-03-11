@@ -1,21 +1,24 @@
-"use client";
-
-import { Suspense, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
-function WhatsAppRedirectContent() {
-  const searchParams = useSearchParams();
-  const message =
-    searchParams.get("text") ??
-    "Hello Dexter Logistics! I'm interested in booking a shipment.";
-  const source = searchParams.get("source") ?? "website";
-  const whatsappUrl = buildWhatsAppUrl(message);
+type WhatsAppRedirectPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
 
-  useEffect(() => {
-    window.location.replace(whatsappUrl);
-  }, [whatsappUrl]);
+function pickFirst(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value[0];
+  return value;
+}
+
+export default async function WhatsAppRedirectPage({
+  searchParams,
+}: WhatsAppRedirectPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const message =
+    pickFirst(resolvedSearchParams.text) ??
+    "Hello Dexter Logistics! I'm interested in booking a shipment.";
+  const source = pickFirst(resolvedSearchParams.source) ?? "website";
+  const whatsappUrl = buildWhatsAppUrl(message);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -25,6 +28,11 @@ function WhatsAppRedirectContent() {
           Preparing your message from {source}. If nothing happens, continue
           manually.
         </p>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.location.replace(${JSON.stringify(whatsappUrl)});`,
+          }}
+        />
         <Link
           href={whatsappUrl}
           className="mt-8 inline-flex rounded-2xl bg-primary px-6 py-3 font-semibold text-primary-foreground"
@@ -33,13 +41,5 @@ function WhatsAppRedirectContent() {
         </Link>
       </div>
     </main>
-  );
-}
-
-export default function WhatsAppRedirectPage() {
-  return (
-    <Suspense fallback={null}>
-      <WhatsAppRedirectContent />
-    </Suspense>
   );
 }
