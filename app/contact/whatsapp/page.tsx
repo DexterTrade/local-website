@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
-export default function WhatsAppRedirectPage() {
+function WhatsAppRedirectContent() {
   const searchParams = useSearchParams();
   const message =
     searchParams.get("text") ??
@@ -33,5 +33,13 @@ export default function WhatsAppRedirectPage() {
         </Link>
       </div>
     </main>
+  );
+}
+
+export default function WhatsAppRedirectPage() {
+  return (
+    <Suspense fallback={null}>
+      <WhatsAppRedirectContent />
+    </Suspense>
   );
 }
