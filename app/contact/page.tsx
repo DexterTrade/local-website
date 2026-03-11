@@ -2,13 +2,20 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Mail, Phone, MapPin, Clock } from "lucide-react"
 import { getCookie, sendMetaEvent } from "@/lib/meta-client"
+import {
+  CONTACT_FIRST_NAME_INPUT_ID,
+  CONTACT_FORM_ID,
+  buildContactLeadUrl,
+  scrollToContactForm,
+  updateContactLeadUrl,
+} from "@/lib/scroll-to-contact-form"
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -22,10 +29,12 @@ export default function Contact() {
   })
 
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const sendLeadEvent = async () => {
     const payload = {
       event_name: "Lead",
+      event_source_url: buildContactLeadUrl("submitted") || undefined,
       user_data: {
         email: formData.email,
         phone: formData.phone,
@@ -43,18 +52,35 @@ export default function Contact() {
     await sendMetaEvent(payload)
   }
 
+  useEffect(() => {
+    scrollToContactForm()
+  }, [])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Simulate form submission
-    console.log("Form submitted:", formData)
+
+    if (isSubmitting) return
+
+    setIsSubmitting(true)
+    updateContactLeadUrl("submitted")
     setSubmitted(true)
-    void sendLeadEvent()
-    setTimeout(() => {
+
+    try {
+      await sendLeadEvent()
+    } finally {
+      window.setTimeout(() => {
+        updateContactLeadUrl()
+        scrollToContactForm()
+        setIsSubmitting(false)
+      }, 100)
+    }
+
+    window.setTimeout(() => {
       setFormData({
         firstName: "",
         lastName: "",
@@ -127,7 +153,7 @@ export default function Contact() {
             </div>
 
             {/* Contact Form */}
-            <div className="max-w-2xl mx-auto">
+            <div id={CONTACT_FORM_ID} className="max-w-2xl mx-auto">
               <Card className="p-8 md:p-12">
                 <h2 className="text-2xl font-bold mb-6">Send us a Message</h2>
 
@@ -144,6 +170,7 @@ export default function Contact() {
                         <label className="block text-sm font-medium mb-2">First Name</label>
                         <input
                           type="text"
+                          id={CONTACT_FIRST_NAME_INPUT_ID}
                           name="firstName"
                           value={formData.firstName}
                           onChange={handleChange}
@@ -234,8 +261,8 @@ export default function Contact() {
                       />
                     </div>
 
-                    <Button type="submit" size="lg" className="w-full">
-                      Send Message
+                    <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? "Sending..." : "Send Message"}
                     </Button>
                   </form>
                 )}

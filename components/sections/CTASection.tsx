@@ -1,13 +1,19 @@
 "use client"
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Metadata } from "next";
 import { getCookie, sendMetaEvent } from "@/lib/meta-client";
 import { COUNTRIES } from "@/lib/countries";
-import { SHIPPING_FORM_ID, SHIPPING_NAME_INPUT_ID } from "@/lib/scroll-to-shipping-form";
+import {
+	scrollToShippingForm,
+	SHIPPING_FORM_ID,
+	SHIPPING_NAME_INPUT_ID,
+} from "@/lib/scroll-to-shipping-form";
+import { buildInternalWhatsAppRedirectUrl } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
 	title: "Contact Dexter Logistics | Book a Shipment",
@@ -16,6 +22,7 @@ export const metadata: Metadata = {
 };
 
 const CTASection = () => {
+	const router = useRouter();
 	const [name, setName] = useState("");
 	const [whatsAppNumber, setWhatsAppNumber] = useState("");
 	const [fromCountry, setFromCountry] = useState("");
@@ -103,12 +110,10 @@ const CTASection = () => {
 				},
 			});
 		} finally {
-			window.open(
-				`https://wa.me/923326135002?text=${encodeURIComponent(message)}`,
-				"_blank"
-			);
 			setIsSubmitting(false);
 		}
+
+		router.push(buildInternalWhatsAppRedirectUrl(message, "cta_bottom_form"));
 	};
 
 	return (
@@ -339,10 +344,7 @@ const CTASection = () => {
 							className="rounded-2xl border-foreground/40 text-foreground hover:bg-foreground/10 bg-transparent"
 							onClick={() => {
 								void trackContactClick();
-								window.open(
-									"https://wa.me/923326135002?text=Hello%20Dexter%20Logistics!%20I%27m%20interested%20in%20booking%20a%20shipment.",
-									"_blank"
-								);
+								scrollToShippingForm();
 							}}
 						>
 							Contact Us
