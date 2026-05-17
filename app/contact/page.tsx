@@ -110,8 +110,8 @@ export default function Contact() {
     {
       icon: MapPin,
       title: "Address",
-      details: "123 Commerce Street",
-      subtext: "Trade City, TC 12345",
+      details: "Office 64, opposite DMO Office",
+      subtext: "Workshop Road, Mughalpura, Lahore",
     },
     {
       icon: Clock,
@@ -274,12 +274,21 @@ export default function Contact() {
         {/* Map Section */}
         <section className="py-16 md:py-24 bg-secondary">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold mb-8 text-center">Find Us</h2>
-            <div className="bg-muted rounded-lg h-96 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                <p className="text-muted-foreground">Interactive map would be displayed here</p>
-              </div>
+            <h2 className="text-3xl font-bold mb-2 text-center">Find Us</h2>
+            <p className="text-center text-muted-foreground mb-8">
+              Office 64, opposite DMO Office, Workshop Road, Mughalpura, Lahore
+            </p>
+            <div className="rounded-lg overflow-hidden h-96 border border-border">
+              <iframe
+                title="Dexter Logistics Location"
+                src="https://maps.google.com/maps?q=31.5666561126709,74.36801147460938&hl=en&z=17&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
           </div>
         </section>

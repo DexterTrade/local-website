@@ -1,38 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminAuthorized } from "@/lib/admin-auth";
+import { createClient } from "@supabase/supabase-js";
 import { CountryRate, getCountryRates, saveCountryRates } from "@/lib/rates-store";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+);
 
 const unauthorized = () =>
   NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
-const readAuthFromRequest = async (request: NextRequest) => {
-  const headerUser = request.headers.get("x-admin-user");
-  const headerPassword = request.headers.get("x-admin-password");
-  if (headerUser || headerPassword) {
-    return { username: headerUser, password: headerPassword };
-  }
-
-  const body = await request.json().catch(() => ({}));
-  return {
-    username: typeof body.username === "string" ? body.username : null,
-    password: typeof body.password === "string" ? body.password : null,
-    body,
-  };
+const verifySession = async (request: NextRequest) => {
+  const auth = request.headers.get("Authorization");
+  if (!auth?.startsWith("Bearer ")) return null;
+  const token = auth.slice(7);
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return null;
+  return user;
 };
 
 export async function GET(request: NextRequest) {
-  const { username, password } = await readAuthFromRequest(request);
-  if (!isAdminAuthorized(username, password)) return unauthorized();
+  if (!await verifySession(request)) return unauthorized();
 
   const rates = await getCountryRates();
   return NextResponse.json({ ok: true, rates });
 }
 
 export async function POST(request: NextRequest) {
-  const payload = await readAuthFromRequest(request);
-  if (!isAdminAuthorized(payload.username, payload.password)) return unauthorized();
+  if (!await verifySession(request)) return unauthorized();
 
-  const body = (payload as { body?: { rates?: unknown } }).body;
+  const body = await request.json().catch(() => ({}));
   const incoming = body?.rates;
 
   if (!Array.isArray(incoming)) {

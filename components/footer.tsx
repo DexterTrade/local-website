@@ -327,8 +327,8 @@ export function Footer() {
 							<li className="flex items-start gap-2">
 								<MapPin className="h-4 w-4 mt-0.5 text-primary" />
 								<span>
-									1 Wheatmen Rd, Shalimar Larechs Colony,
-									Lahore, 54000 Pakistan
+									Office 64, opposite DMO Office, Workshop Road,
+									Mughalpura, Lahore, Pakistan
 								</span>
 							</li>
 						</ul>

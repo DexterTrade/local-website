@@ -68,6 +68,12 @@ export function Navigation() {
 								{item.label}
 							</a>
 						))}
+						<Link
+							href="/track"
+							className="text-foreground hover:text-primary transition-colors text-sm font-medium"
+						>
+							Track
+						</Link>
 					</div>
 
 					{/* Right side actions */}
@@ -137,6 +143,13 @@ export function Navigation() {
 								{item.label}
 							</a>
 						))}
+						<Link
+							href="/track"
+							className="block px-4 py-2 text-foreground hover:bg-secondary rounded-lg transition-colors text-sm font-medium"
+							onClick={() => setIsOpen(false)}
+						>
+							Track Parcel
+						</Link>
 						<Button
 							className="w-full mt-4"
 							onClick={() => {
