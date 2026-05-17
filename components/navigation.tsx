@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
@@ -13,13 +14,16 @@ import { scrollToShippingForm } from "@/lib/scroll-to-shipping-form";
 
 export function Navigation() {
 	const [isOpen, setIsOpen] = useState(false);
+	const pathname = usePathname();
+
+	const href = (hash: string) => pathname === "/" ? hash : `/${hash}`;
 
 	const navItems = [
-		{ label: "Home", href: "#home" },
-		{ label: "Services", href: "#services" },
-		{ label: "Why Dexter", href: "#why-dexter" },
-		{ label: "Destinations", href: "#destinations" },
-		{ label: "Contact", href: "#contact" },
+		{ label: "Home", hash: "#home" },
+		{ label: "Services", hash: "#services" },
+		{ label: "Why Dexter", hash: "#why-dexter" },
+		{ label: "Destinations", hash: "#destinations" },
+		{ label: "Contact", hash: "#contact" },
 	];
 
 	return (
@@ -28,7 +32,7 @@ export function Navigation() {
 				<div className="flex justify-between items-center h-16">
 					{/* Logo */}
 					<Link
-						href="#home"
+						href={href("#home")}
 						className="flex items-center gap-2"
 					>
 						<Image
@@ -47,8 +51,8 @@ export function Navigation() {
 					<div className="hidden md:flex items-center gap-8">
 						{navItems.map((item) => (
 							<a
-								key={item.href}
-								href={item.href}
+								key={item.hash}
+								href={href(item.hash)}
 								className="text-foreground hover:text-primary transition-colors text-sm font-medium"
 								onClick={() => {
 									void sendMetaEvent({
@@ -60,7 +64,7 @@ export function Navigation() {
 										custom_data: {
 											content_type: "section",
 											content_name: item.label,
-											content_id: item.href,
+											content_id: item.hash,
 										},
 									});
 								}}
@@ -121,8 +125,8 @@ export function Navigation() {
 					<div className="md:hidden pb-4 space-y-2">
 						{navItems.map((item) => (
 							<a
-								key={item.href}
-								href={item.href}
+								key={item.hash}
+								href={href(item.hash)}
 								className="block px-4 py-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
 								onClick={() => {
 									void sendMetaEvent({
@@ -134,7 +138,7 @@ export function Navigation() {
 										custom_data: {
 											content_type: "section",
 											content_name: item.label,
-											content_id: item.href,
+											content_id: item.hash,
 										},
 									});
 									setIsOpen(false);
