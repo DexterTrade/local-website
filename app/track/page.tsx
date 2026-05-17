@@ -1,39 +1,41 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Search, Package, Truck, CheckCircle, Clock, Circle } from "lucide-react";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
-import { supabase, type Parcel } from "@/lib/supabase";
+import { supabase, type Parcel, type ParcelStatus } from "@/lib/supabase";
 
-const STATUS_STEPS = ["Received", "Processing", "In Transit", "Out for Delivery", "Delivered"];
+function StatusTimeline({
+  steps,
+  currentStatusId,
+}: {
+  steps: ParcelStatus[];
+  currentStatusId: number;
+}) {
+  if (steps.length === 0) return null;
 
-function getStepIndex(label: string): number {
-  const l = label.toLowerCase();
-  if (l.includes("deliver")) return 4;
-  if (l.includes("out")) return 3;
-  if (l.includes("transit")) return 2;
-  if (l.includes("process")) return 1;
-  return 0;
-}
+  const currentIndex = steps.findIndex((s) => s.id === currentStatusId);
+  const total = steps.length - 1;
 
-function StatusTimeline({ label }: { label: string }) {
-  const current = getStepIndex(label);
   return (
     <div className="mt-6">
-      <div className="flex items-center justify-between relative">
+      <div className="flex items-start justify-between relative">
+        {/* background track */}
         <div className="absolute left-0 right-0 top-4 h-0.5 bg-border" />
+        {/* filled progress */}
         <div
           className="absolute left-0 top-4 h-0.5 bg-primary transition-all duration-500"
-          style={{ width: `${(current / (STATUS_STEPS.length - 1)) * 100}%` }}
+          style={{ width: total > 0 ? `${(currentIndex / total) * 100}%` : "0%" }}
         />
-        {STATUS_STEPS.map((step, i) => {
-          const done = i < current;
-          const active = i === current;
+
+        {steps.map((step, i) => {
+          const done = i < currentIndex;
+          const active = i === currentIndex;
           return (
-            <div key={step} className="flex flex-col items-center gap-1.5 relative z-10">
+            <div key={step.id} className="flex flex-col items-center gap-1.5 relative z-10">
               <div
-                className={`h-8 w-8 rounded-full flex items-center justify-center border-2 transition-colors ${
+                className={`h-8 w-8 shrink-0 rounded-full flex items-center justify-center border-2 transition-colors ${
                   done
                     ? "bg-primary border-primary"
                     : active
@@ -50,11 +52,15 @@ function StatusTimeline({ label }: { label: string }) {
                 )}
               </div>
               <span
-                className={`text-xs text-center max-w-[60px] leading-tight ${
-                  active ? "text-primary font-semibold" : done ? "text-foreground/70" : "text-muted-foreground"
+                className={`text-xs text-center w-16 min-h-[2.5rem] leading-tight ${
+                  active
+                    ? "text-primary font-semibold"
+                    : done
+                    ? "text-foreground/70"
+                    : "text-muted-foreground"
                 }`}
               >
-                {step}
+                {step.lable}
               </span>
             </div>
           );
@@ -64,7 +70,13 @@ function StatusTimeline({ label }: { label: string }) {
   );
 }
 
-function ParcelCard({ parcel }: { parcel: Parcel }) {
+function ParcelCard({
+  parcel,
+  statusSteps,
+}: {
+  parcel: Parcel;
+  statusSteps: ParcelStatus[];
+}) {
   const statusLabel = parcel.parcel_status?.lable ?? String(parcel.status_id);
   const freightLabel = parcel.feight_type?.lable ?? String(parcel.freight_type_id);
 
@@ -144,8 +156,8 @@ function ParcelCard({ parcel }: { parcel: Parcel }) {
           </div>
         )}
 
-        {/* Status timeline */}
-        <StatusTimeline label={statusLabel} />
+        {/* Status timeline using DB labels */}
+        <StatusTimeline steps={statusSteps} currentStatusId={parcel.status_id} />
       </div>
     </div>
   );
@@ -157,9 +169,21 @@ const isUUID = (s: string) =>
 export default function TrackPage() {
   const [query, setQuery] = useState("");
   const [parcels, setParcels] = useState<Parcel[]>([]);
+  const [statusSteps, setStatusSteps] = useState<ParcelStatus[]>([]);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Load status steps once on mount
+  useEffect(() => {
+    supabase
+      .from("parcel_status")
+      .select("*")
+      .order("sort_order")
+      .then(({ data }) => {
+        if (data) setStatusSteps(data as ParcelStatus[]);
+      });
+  }, []);
 
   const handleSearch = async (e: FormEvent) => {
     e.preventDefault();
@@ -253,7 +277,7 @@ export default function TrackPage() {
                   </p>
                 )}
                 {parcels.map((p) => (
-                  <ParcelCard key={p.id} parcel={p} />
+                  <ParcelCard key={p.id} parcel={p} statusSteps={statusSteps} />
                 ))}
               </div>
             )}
