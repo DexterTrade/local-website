@@ -98,6 +98,12 @@ export default function AdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Order filters
+  const [filterName, setFilterName] = useState("");
+  const [filterNumber, setFilterNumber] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterFreight, setFilterFreight] = useState("");
+
   // Shared
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -108,6 +114,37 @@ export default function AdminPage() {
     if (!query) return rates;
     return rates.filter((r) => r.country.toLowerCase().includes(query));
   }, [rates, search]);
+
+  const filteredParcels = useMemo(() => {
+    return parcels.filter((p) => {
+      if (filterName) {
+        const n = filterName.toLowerCase();
+        if (
+          !p.sender_name.toLowerCase().includes(n) &&
+          !p.receiver_name.toLowerCase().includes(n)
+        ) return false;
+      }
+      if (filterNumber) {
+        const n = filterNumber.toLowerCase();
+        if (
+          !p.sender_number.toLowerCase().includes(n) &&
+          !p.receiver_number.toLowerCase().includes(n)
+        ) return false;
+      }
+      if (filterStatus && String(p.status_id) !== filterStatus) return false;
+      if (filterFreight && String(p.freight_type_id) !== filterFreight) return false;
+      return true;
+    });
+  }, [parcels, filterName, filterNumber, filterStatus, filterFreight]);
+
+  const hasActiveFilter = filterName || filterNumber || filterStatus || filterFreight;
+
+  const clearFilters = () => {
+    setFilterName("");
+    setFilterNumber("");
+    setFilterStatus("");
+    setFilterFreight("");
+  };
 
   // ── Session bootstrap ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -637,14 +674,69 @@ export default function AdminPage() {
                     </form>
                   </div>
                 ) : (
-                  <div className="flex justify-end mb-4">
-                    <button
-                      type="button"
-                      onClick={openNewForm}
-                      className="h-10 px-6 rounded-md bg-primary text-primary-foreground font-medium"
-                    >
-                      + New Order
-                    </button>
+                  <div className="space-y-3 mb-4">
+                    {/* Filter bar */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Filter by name…"
+                        value={filterName}
+                        onChange={(e) => setFilterName(e.target.value)}
+                        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Filter by number…"
+                        value={filterNumber}
+                        onChange={(e) => setFilterNumber(e.target.value)}
+                        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      />
+                      <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      >
+                        <option value="">All statuses</option>
+                        {statuses.map((s) => (
+                          <option key={s.id} value={s.id}>{s.lable}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={filterFreight}
+                        onChange={(e) => setFilterFreight(e.target.value)}
+                        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      >
+                        <option value="">All freight types</option>
+                        {freightTypes.map((ft) => (
+                          <option key={ft.id} value={ft.id}>{ft.lable}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Row count + clear + new order */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-foreground/50">
+                          {filteredParcels.length} of {parcels.length} orders
+                        </span>
+                        {hasActiveFilter && (
+                          <button
+                            type="button"
+                            onClick={clearFilters}
+                            className="text-xs text-destructive hover:underline"
+                          >
+                            Clear filters
+                          </button>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={openNewForm}
+                        className="h-9 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium"
+                      >
+                        + New Order
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -653,6 +745,8 @@ export default function AdminPage() {
                   <p className="text-sm text-foreground/60 py-8 text-center">Loading orders…</p>
                 ) : parcels.length === 0 ? (
                   <p className="text-sm text-foreground/60 py-8 text-center">No orders yet.</p>
+                ) : filteredParcels.length === 0 ? (
+                  <p className="text-sm text-foreground/60 py-8 text-center">No orders match the current filters.</p>
                 ) : (
                   <div className="rounded-2xl border border-border overflow-hidden">
                     <div className="overflow-auto max-h-[60vh]">
@@ -672,7 +766,7 @@ export default function AdminPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {parcels.map((p) => (
+                          {filteredParcels.map((p) => (
                             <tr key={p.id} className="border-t border-border hover:bg-muted/30">
                               <td className="px-4 py-3 whitespace-nowrap">
                                 <IdCell
