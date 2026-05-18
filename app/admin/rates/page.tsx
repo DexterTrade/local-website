@@ -4,13 +4,19 @@ import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "reac
 import { Copy, Check, LogOut } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { supabase, type FreightType, type Parcel, type ParcelStatus } from "@/lib/supabase";
+import { supabase, type Country, type FreightType, type Parcel, type ParcelStatus } from "@/lib/supabase";
+import ReactFlagsSelect from "react-flags-select";
+import ReactCountryFlag from "react-country-flag";
 
-type CountryRate = {
-  country: string;
-  rate_per_kg: number;
-  rate_per_pound: number;
-  updated_at: string;
+const EMPTY_COUNTRY = { country_name: "", rates: "" };
+
+const getDisplayName = (code: string) => {
+  if (!code || code.length !== 2) return code ?? "";
+  try {
+    return new Intl.DisplayNames(["en"], { type: "region" }).of(code.toUpperCase()) ?? code;
+  } catch {
+    return code;
+  }
 };
 
 type Tab = "rates" | "orders";
@@ -86,8 +92,12 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("rates");
 
   // Rates state
-  const [rates, setRates] = useState<CountryRate[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
   const [search, setSearch] = useState("");
+  const [showAddCountry, setShowAddCountry] = useState(false);
+  const [newCountry, setNewCountry] = useState(EMPTY_COUNTRY);
+  const [editingCountry, setEditingCountry] = useState<Country | null>(null);
+  const [editForm, setEditForm] = useState(EMPTY_COUNTRY);
 
   // Orders state
   const [parcels, setParcels] = useState<Parcel[]>([]);
@@ -109,11 +119,11 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const filteredRates = useMemo(() => {
+  const filteredCountries = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return rates;
-    return rates.filter((r) => r.country.toLowerCase().includes(query));
-  }, [rates, search]);
+    if (!query) return countries;
+    return countries.filter((c) => c.country_name?.toLowerCase().includes(query));
+  }, [countries, search]);
 
   const filteredParcels = useMemo(() => {
     return parcels.filter((p) => {
@@ -151,13 +161,13 @@ export default function AdminPage() {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setSessionLoading(false);
-      if (s) void loadRates(s.access_token);
+      if (s) void loadCountries();
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       if (!s) {
-        setRates([]);
+        setCountries([]);
         setParcels([]);
         setFreightTypes([]);
         setStatuses([]);
@@ -167,24 +177,145 @@ export default function AdminPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
-  const loadRates = async (token: string) => {
+  // ── Countries (Rates) ─────────────────────────────────────────────────────
+  const loadCountries = async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/rates", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = (await res.json()) as { ok: boolean; error?: string; rates?: CountryRate[] };
-      if (!res.ok || !data.ok || !data.rates) throw new Error(data.error ?? "Failed to load rates");
-      setRates(data.rates);
+      const { data, error: err } = await supabase
+        .from("countries")
+        .select("*")
+        .order("id");
+      if (err) throw new Error(err.message);
+      setCountries((data ?? []) as Country[]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load rates");
+      setError(err instanceof Error ? err.message : "Failed to load countries");
     } finally {
       setLoading(false);
     }
   };
 
+  const updateCountryRate = (id: number, value: string) => {
+    const parsed = parseFloat(value);
+    setCountries((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, rates: Number.isFinite(parsed) && parsed >= 0 ? parsed : 0 } : c,
+      ),
+    );
+  };
+
+  const saveAllRates = async () => {
+    setLoading(true);
+    setError("");
+    setMessage("");
+    try {
+      const { error: err } = await supabase.from("countries").upsert(
+        countries.map(({ id, country_name, rates, is_active }) => ({
+          id,
+          country_name,
+          rates,
+          is_active,
+        })),
+      );
+      if (err) throw new Error(err.message);
+      setMessage("Rates saved successfully.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save rates");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleActive = async (id: number, value: boolean) => {
+    setCountries((prev) => prev.map((c) => (c.id === id ? { ...c, is_active: value } : c)));
+    const { error: err } = await supabase
+      .from("countries")
+      .update({ is_active: value })
+      .eq("id", id);
+    if (err) setError(err.message);
+  };
+
+  const deleteCountry = async (id: number) => {
+    if (!window.confirm("Delete this country?")) return;
+    setLoading(true);
+    setError("");
+    try {
+      const { error: err } = await supabase.from("countries").delete().eq("id", id);
+      if (err) throw new Error(err.message);
+      setCountries((prev) => prev.filter((c) => c.id !== id));
+      setMessage("Country deleted.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addCountry = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const { data, error: err } = await supabase
+        .from("countries")
+        .insert({
+          country_name: newCountry.country_name.trim(),
+          rates: parseFloat(newCountry.rates) || 0,
+          is_active: true,
+        })
+        .select()
+        .single();
+      if (err) throw new Error(err.message);
+      setCountries((prev) => [...prev, data as Country]);
+      setNewCountry(EMPTY_COUNTRY);
+      setShowAddCountry(false);
+      setMessage("Country added.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add country");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openEditCountry = (c: Country) => {
+    setEditingCountry(c);
+    setEditForm({ country_name: c.country_name ?? "", rates: String(c.rates ?? 0) });
+    setShowAddCountry(false);
+    setError("");
+  };
+
+  const submitEditCountry = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!editingCountry) return;
+    setLoading(true);
+    setError("");
+    try {
+      const { error: err } = await supabase
+        .from("countries")
+        .update({
+          country_name: editForm.country_name,
+          rates: parseFloat(editForm.rates) || 0,
+        })
+        .eq("id", editingCountry.id);
+      if (err) throw new Error(err.message);
+      setCountries((prev) =>
+        prev.map((c) =>
+          c.id === editingCountry.id
+            ? { ...c, country_name: editForm.country_name, rates: parseFloat(editForm.rates) || 0 }
+            : c,
+        ),
+      );
+      setEditingCountry(null);
+      setEditForm(EMPTY_COUNTRY);
+      setMessage("Country updated.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update country");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
   const onLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -197,7 +328,7 @@ export default function AdminPage() {
       if (authError) throw authError;
       if (data.session) {
         setSession(data.session);
-        await loadRates(data.session.access_token);
+        await loadCountries();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -211,48 +342,10 @@ export default function AdminPage() {
     setSession(null);
     setEmail("");
     setPassword("");
+    setCountries([]);
     setActiveTab("rates");
     setError("");
     setMessage("");
-  };
-
-  // ── Rates ─────────────────────────────────────────────────────────────────
-  const updateRateField = (country: string, value: string) => {
-    const parsed = Number(value);
-    setRates((prev) =>
-      prev.map((r) =>
-        r.country === country
-          ? { ...r, rate_per_kg: Number.isFinite(parsed) && parsed >= 0 ? parsed : 0 }
-          : r,
-      ),
-    );
-  };
-
-  const saveRates = async () => {
-    if (!session) return;
-    setLoading(true);
-    setError("");
-    setMessage("");
-    try {
-      const res = await fetch("/api/admin/rates", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          rates: rates.map((r) => ({ ...r, updated_at: new Date().toISOString() })),
-        }),
-      });
-      const data = (await res.json()) as { ok: boolean; error?: string; rates?: CountryRate[] };
-      if (!res.ok || !data.ok || !data.rates) throw new Error(data.error ?? "Failed to save");
-      setRates(data.rates);
-      setMessage("Rates saved successfully.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save rates");
-    } finally {
-      setLoading(false);
-    }
   };
 
   // ── Orders (Supabase) ─────────────────────────────────────────────────────
@@ -476,48 +569,199 @@ export default function AdminPage() {
             {/* ── Rates Tab ── */}
             {activeTab === "rates" && (
               <div>
+                {/* Toolbar */}
                 <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between mb-4">
                   <input
                     type="text"
-                    placeholder="Search country..."
+                    placeholder="Search country…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full md:max-w-sm h-10 rounded-md border border-input bg-background px-3"
+                    className="w-full md:max-w-sm h-10 rounded-md border border-input bg-background px-3 text-sm"
                   />
-                  <button
-                    type="button"
-                    onClick={saveRates}
-                    disabled={loading}
-                    className="h-10 px-6 rounded-md bg-primary text-primary-foreground font-medium disabled:opacity-60"
-                  >
-                    {loading ? "Saving..." : "Save All Rates"}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddCountry((v) => !v);
+                        setEditingCountry(null);
+                        setError("");
+                      }}
+                      className="h-10 px-4 rounded-md border border-border text-sm font-medium hover:bg-muted"
+                    >
+                      {showAddCountry ? "Cancel" : "+ Add Country"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveAllRates}
+                      disabled={loading}
+                      className="h-10 px-6 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-60"
+                    >
+                      {loading ? "Saving…" : "Save All Rates"}
+                    </button>
+                  </div>
                 </div>
+
+                {/* Add country form */}
+                {showAddCountry && (
+                  <form
+                    onSubmit={addCountry}
+                    className="grid grid-cols-1 md:grid-cols-[1fr_160px_auto] gap-3 mb-4 p-4 border border-border rounded-xl bg-card"
+                  >
+                    <ReactFlagsSelect
+                      selected={newCountry.country_name}
+                      onSelect={(code) => setNewCountry((n) => ({ ...n, country_name: code }))}
+                      searchable
+                      searchPlaceholder="Search country…"
+                      placeholder="Select country"
+                      className="[&_button]:h-9 [&_button]:rounded-md [&_button]:border [&_button]:border-input [&_button]:bg-background [&_button]:text-sm"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Rate / kg (₨)"
+                      min="0"
+                      step="0.01"
+                      value={newCountry.rates}
+                      onChange={(e) => setNewCountry((n) => ({ ...n, rates: e.target.value }))}
+                      className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={loading || !newCountry.country_name}
+                      className="h-9 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-60"
+                    >
+                      Add
+                    </button>
+                  </form>
+                )}
+
+                {/* Edit country form */}
+                {editingCountry && !showAddCountry && (
+                  <form
+                    onSubmit={submitEditCountry}
+                    className="grid grid-cols-1 md:grid-cols-[1fr_160px_auto_auto] gap-3 mb-4 p-4 border border-primary/30 rounded-xl bg-card"
+                  >
+                    <ReactFlagsSelect
+                      selected={editForm.country_name}
+                      onSelect={(code) => setEditForm((f) => ({ ...f, country_name: code }))}
+                      searchable
+                      searchPlaceholder="Search country…"
+                      placeholder="Select country"
+                      className="[&_button]:h-9 [&_button]:rounded-md [&_button]:border [&_button]:border-input [&_button]:bg-background [&_button]:text-sm"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Rate / kg (₨)"
+                      min="0"
+                      step="0.01"
+                      value={editForm.rates}
+                      onChange={(e) => setEditForm((f) => ({ ...f, rates: e.target.value }))}
+                      className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={loading || !editForm.country_name}
+                      className="h-9 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-60"
+                    >
+                      {loading ? "Saving…" : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setEditingCountry(null); setEditForm(EMPTY_COUNTRY); }}
+                      className="h-9 px-4 rounded-md border border-border text-sm hover:bg-muted"
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                )}
+
+                {/* Table */}
                 <div className="rounded-2xl border border-border overflow-hidden">
                   <div className="max-h-[65vh] overflow-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-muted sticky top-0">
                         <tr>
                           <th className="text-left px-4 py-3">Country</th>
-                          <th className="text-left px-4 py-3">Rate / kg</th>
+                          <th className="text-left px-4 py-3">Rate / kg (₨)</th>
+                          <th className="text-left px-4 py-3">Active</th>
+                          <th className="px-4 py-3" />
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredRates.map((rate) => (
-                          <tr key={rate.country} className="border-t border-border">
-                            <td className="px-4 py-3">{rate.country}</td>
+                        {filteredCountries.map((c) => (
+                          <tr
+                            key={c.id}
+                            className={`border-t border-border transition-colors ${
+                              editingCountry?.id === c.id ? "bg-primary/5" : ""
+                            }`}
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2 font-medium">
+                                {c.country_name && c.country_name.length === 2 ? (
+                                  <ReactCountryFlag
+                                    countryCode={c.country_name}
+                                    svg
+                                    style={{ width: "1.4em", height: "1.4em", borderRadius: "3px" }}
+                                  />
+                                ) : (
+                                  <span className="text-base">🌍</span>
+                                )}
+                                {getDisplayName(c.country_name ?? "")}
+                              </div>
+                            </td>
                             <td className="px-4 py-3">
                               <input
                                 type="number"
                                 min="0"
                                 step="0.01"
-                                value={rate.rate_per_kg}
-                                onChange={(e) => updateRateField(rate.country, e.target.value)}
-                                className="w-36 h-9 rounded-md border border-input bg-background px-2"
+                                value={c.rates ?? 0}
+                                onChange={(e) => updateCountryRate(c.id, e.target.value)}
+                                className="w-36 h-9 rounded-md border border-input bg-background px-2 text-sm"
                               />
+                            </td>
+                            <td className="px-4 py-3">
+                              <button
+                                type="button"
+                                onClick={() => void toggleActive(c.id, !c.is_active)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                                  c.is_active ? "bg-primary" : "bg-muted-foreground/30"
+                                }`}
+                              >
+                                <span
+                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    c.is_active ? "translate-x-6" : "translate-x-1"
+                                  }`}
+                                />
+                              </button>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => openEditCountry(c)}
+                                  className="text-xs px-3 py-1 rounded-md border border-border hover:bg-muted"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => void deleteCountry(c.id)}
+                                  className="text-xs px-3 py-1 rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10"
+                                >
+                                  Delete
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
+                        {filteredCountries.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="px-4 py-8 text-center text-foreground/50 text-sm">
+                              {countries.length === 0 ? "No countries yet." : "No matches."}
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>

@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 import React from "react";
 import { Card } from "../ui/card";
-import { getCountryRates } from "@/lib/rates-store";
-import { DESTINATION_COUNTRIES } from "@/lib/destination-countries";
+import { createClient } from "@supabase/supabase-js";
+import type { Country } from "@/lib/supabase";
 
 export const metadata: Metadata = {
 	title: "Global Destinations | Dexter Logistics",
@@ -10,13 +10,37 @@ export const metadata: Metadata = {
 		"Ship from Pakistan to the UK, USA, UAE, Canada, and more — trusted international delivery.",
 };
 
+const codeToEmoji = (code: string) => {
+	if (!code || code.length !== 2) return "🌍";
+	return code
+		.toUpperCase()
+		.split("")
+		.map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
+		.join("");
+};
+
+const getDisplayName = (code: string) => {
+	if (!code || code.length !== 2) return code ?? "";
+	try {
+		return new Intl.DisplayNames(["en"], { type: "region" }).of(code.toUpperCase()) ?? code;
+	} catch {
+		return code;
+	}
+};
+
 const DestinationsSection = async () => {
-	const rates = await getCountryRates();
-	const ratesMap = new Map(rates.map((rate) => [rate.country, rate]));
-	const destinationsWithRates = DESTINATION_COUNTRIES.map((destination) => ({
-		...destination,
-		rate: ratesMap.get(destination.country),
-	}));
+	const supabase = createClient(
+		process.env.NEXT_PUBLIC_SUPABASE_URL!,
+		process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+	);
+
+	const { data } = await supabase
+		.from("countries")
+		.select("*")
+		.eq("is_active", true)
+		.order("id");
+
+	const countries = (data ?? []) as Country[];
 
 	return (
 		<section
@@ -35,21 +59,26 @@ const DestinationsSection = async () => {
 				</div>
 
 				<div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-					{destinationsWithRates.map((dest, index) => (
-						<Card
-							key={index}
-							className="p-6 text-center hover:shadow-lg transition-shadow rounded-2xl"
-						>
-							<div className="text-4xl mb-3">{dest.flag}</div>
-							<p className="font-semibold text-foreground mb-1">
-								{dest.country}
-							</p>
-
-							<p className="text-sm text-primary font-medium">
-								₨{(dest.rate?.rate_per_kg ?? 0).toLocaleString()} / kg
-							</p>
-						</Card>
-					))}
+					{countries.map((dest) => {
+						const code = dest.country_name ?? "";
+						const isCode = code.length === 2;
+						return (
+							<Card
+								key={dest.id}
+								className="p-6 text-center hover:shadow-lg transition-shadow rounded-2xl"
+							>
+								<div className="text-4xl mb-3">
+									{isCode ? codeToEmoji(code) : "🌍"}
+								</div>
+								<p className="font-semibold text-foreground mb-1">
+									{isCode ? getDisplayName(code) : code}
+								</p>
+								<p className="text-sm text-primary font-medium">
+									₨{(dest.rates ?? 0).toLocaleString()} / kg
+								</p>
+							</Card>
+						);
+					})}
 				</div>
 			</div>
 		</section>
