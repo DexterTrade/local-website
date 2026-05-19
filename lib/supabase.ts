@@ -5,20 +5,22 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export type Country = {
-  id: number;
-  country_name: string | null;
-  rates: number | null;
-  is_active: boolean;
-  created_at: string;
-};
-
 export type FreightType = {
   id: number;
   code: string;
   lable: string;
   sort_order: number;
   created_at: string;
+};
+
+export type Country = {
+  id: number;
+  country_name: string | null;
+  rates: number | null;
+  is_active: boolean;
+  created_at: string;
+  freight_type_id: number;
+  feight_type?: FreightType;
 };
 
 export type ParcelStatus = {

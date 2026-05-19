@@ -8,7 +8,7 @@ import { supabase, type Country, type FreightType, type Parcel, type ParcelStatu
 import ReactFlagsSelect from "react-flags-select";
 import ReactCountryFlag from "react-country-flag";
 
-const EMPTY_COUNTRY = { country_name: "", rates: "" };
+const EMPTY_COUNTRY = { country_name: "", rates: "", freight_type_id: "" };
 
 const getDisplayName = (code: string) => {
   if (!code || code.length !== 2) return code ?? "";
@@ -182,12 +182,14 @@ export default function AdminPage() {
     setLoading(true);
     setError("");
     try {
-      const { data, error: err } = await supabase
-        .from("countries")
-        .select("*")
-        .order("id");
+      const [{ data, error: err }, { data: ft, error: ftErr }] = await Promise.all([
+        supabase.from("countries").select("*, feight_type(*)").order("id"),
+        supabase.from("feight_type").select("*").order("sort_order"),
+      ]);
       if (err) throw new Error(err.message);
+      if (ftErr) throw new Error(ftErr.message);
       setCountries((data ?? []) as Country[]);
+      setFreightTypes((ft ?? []) as FreightType[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load countries");
     } finally {
@@ -210,11 +212,12 @@ export default function AdminPage() {
     setMessage("");
     try {
       const { error: err } = await supabase.from("countries").upsert(
-        countries.map(({ id, country_name, rates, is_active }) => ({
+        countries.map(({ id, country_name, rates, is_active, freight_type_id }) => ({
           id,
           country_name,
           rates,
           is_active,
+          freight_type_id,
         })),
       );
       if (err) throw new Error(err.message);
@@ -262,8 +265,9 @@ export default function AdminPage() {
           country_name: newCountry.country_name.trim(),
           rates: parseFloat(newCountry.rates) || 0,
           is_active: true,
+          freight_type_id: Number(newCountry.freight_type_id),
         })
-        .select()
+        .select("*, feight_type(*)")
         .single();
       if (err) throw new Error(err.message);
       setCountries((prev) => [...prev, data as Country]);
@@ -279,7 +283,11 @@ export default function AdminPage() {
 
   const openEditCountry = (c: Country) => {
     setEditingCountry(c);
-    setEditForm({ country_name: c.country_name ?? "", rates: String(c.rates ?? 0) });
+    setEditForm({
+      country_name: c.country_name ?? "",
+      rates: String(c.rates ?? 0),
+      freight_type_id: String(c.freight_type_id ?? ""),
+    });
     setShowAddCountry(false);
     setError("");
   };
@@ -290,18 +298,26 @@ export default function AdminPage() {
     setLoading(true);
     setError("");
     try {
+      const ftId = Number(editForm.freight_type_id);
       const { error: err } = await supabase
         .from("countries")
         .update({
           country_name: editForm.country_name,
           rates: parseFloat(editForm.rates) || 0,
+          freight_type_id: ftId,
         })
         .eq("id", editingCountry.id);
       if (err) throw new Error(err.message);
       setCountries((prev) =>
         prev.map((c) =>
           c.id === editingCountry.id
-            ? { ...c, country_name: editForm.country_name, rates: parseFloat(editForm.rates) || 0 }
+            ? {
+                ...c,
+                country_name: editForm.country_name,
+                rates: parseFloat(editForm.rates) || 0,
+                freight_type_id: ftId,
+                feight_type: freightTypes.find((ft) => ft.id === ftId),
+              }
             : c,
         ),
       );
@@ -605,7 +621,7 @@ export default function AdminPage() {
                 {showAddCountry && (
                   <form
                     onSubmit={addCountry}
-                    className="grid grid-cols-1 md:grid-cols-[1fr_160px_auto] gap-3 mb-4 p-4 border border-border rounded-xl bg-card"
+                    className="grid grid-cols-1 md:grid-cols-[1fr_180px_160px_auto] gap-3 mb-4 p-4 border border-border rounded-xl bg-card"
                   >
                     <ReactFlagsSelect
                       selected={newCountry.country_name}
@@ -615,6 +631,17 @@ export default function AdminPage() {
                       placeholder="Select country"
                       className="[&_button]:h-9 [&_button]:rounded-md [&_button]:border [&_button]:border-input [&_button]:bg-background [&_button]:text-sm"
                     />
+                    <select
+                      value={newCountry.freight_type_id}
+                      onChange={(e) => setNewCountry((n) => ({ ...n, freight_type_id: e.target.value }))}
+                      className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      required
+                    >
+                      <option value="">Freight type</option>
+                      {freightTypes.map((ft) => (
+                        <option key={ft.id} value={ft.id}>{ft.lable}</option>
+                      ))}
+                    </select>
                     <input
                       type="number"
                       placeholder="Rate / kg (₨)"
@@ -627,7 +654,7 @@ export default function AdminPage() {
                     />
                     <button
                       type="submit"
-                      disabled={loading || !newCountry.country_name}
+                      disabled={loading || !newCountry.country_name || !newCountry.freight_type_id}
                       className="h-9 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-60"
                     >
                       Add
@@ -639,7 +666,7 @@ export default function AdminPage() {
                 {editingCountry && !showAddCountry && (
                   <form
                     onSubmit={submitEditCountry}
-                    className="grid grid-cols-1 md:grid-cols-[1fr_160px_auto_auto] gap-3 mb-4 p-4 border border-primary/30 rounded-xl bg-card"
+                    className="grid grid-cols-1 md:grid-cols-[1fr_180px_160px_auto_auto] gap-3 mb-4 p-4 border border-primary/30 rounded-xl bg-card"
                   >
                     <ReactFlagsSelect
                       selected={editForm.country_name}
@@ -649,6 +676,17 @@ export default function AdminPage() {
                       placeholder="Select country"
                       className="[&_button]:h-9 [&_button]:rounded-md [&_button]:border [&_button]:border-input [&_button]:bg-background [&_button]:text-sm"
                     />
+                    <select
+                      value={editForm.freight_type_id}
+                      onChange={(e) => setEditForm((f) => ({ ...f, freight_type_id: e.target.value }))}
+                      className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      required
+                    >
+                      <option value="">Freight type</option>
+                      {freightTypes.map((ft) => (
+                        <option key={ft.id} value={ft.id}>{ft.lable}</option>
+                      ))}
+                    </select>
                     <input
                       type="number"
                       placeholder="Rate / kg (₨)"
@@ -661,7 +699,7 @@ export default function AdminPage() {
                     />
                     <button
                       type="submit"
-                      disabled={loading || !editForm.country_name}
+                      disabled={loading || !editForm.country_name || !editForm.freight_type_id}
                       className="h-9 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-60"
                     >
                       {loading ? "Saving…" : "Save"}
@@ -683,6 +721,7 @@ export default function AdminPage() {
                       <thead className="bg-muted sticky top-0">
                         <tr>
                           <th className="text-left px-4 py-3">Country</th>
+                          <th className="text-left px-4 py-3">Freight Type</th>
                           <th className="text-left px-4 py-3">Rate / kg (₨)</th>
                           <th className="text-left px-4 py-3">Active</th>
                           <th className="px-4 py-3" />
@@ -709,6 +748,9 @@ export default function AdminPage() {
                                 )}
                                 {getDisplayName(c.country_name ?? "")}
                               </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-foreground/70">
+                              {c.feight_type?.lable ?? "—"}
                             </td>
                             <td className="px-4 py-3">
                               <input

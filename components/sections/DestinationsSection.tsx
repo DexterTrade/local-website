@@ -36,7 +36,7 @@ const DestinationsSection = async () => {
 
 	const { data } = await supabase
 		.from("countries")
-		.select("*")
+		.select("*, feight_type(*)")
 		.eq("is_active", true)
 		.order("id");
 
@@ -73,6 +73,11 @@ const DestinationsSection = async () => {
 								<p className="font-semibold text-foreground mb-1">
 									{isCode ? getDisplayName(code) : code}
 								</p>
+								{dest.feight_type && (
+									<p className="text-xs text-muted-foreground mb-1">
+										{dest.feight_type.lable}
+									</p>
+								)}
 								<p className="text-sm text-primary font-medium">
 									₨{(dest.rates ?? 0).toLocaleString()} / kg
 								</p>
