@@ -392,7 +392,7 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (session && activeTab === "orders" && freightTypes.length === 0) {
+    if (session && activeTab === "orders" && parcels.length === 0 && statuses.length === 0) {
       void loadOrdersData();
     }
   }, [session, activeTab]);
