@@ -1,10 +1,24 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Search, Package, Truck, CheckCircle, Clock, Circle } from "lucide-react";
+import {
+  Search,
+  Package,
+  Truck,
+  CheckCircle,
+  Clock,
+  Circle,
+  ChevronDown,
+  MapPin,
+} from "lucide-react";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
-import { supabase, type Parcel, type ParcelStatus } from "@/lib/supabase";
+import {
+  supabase,
+  type Parcel,
+  type ParcelHistory,
+  type ParcelStatus,
+} from "@/lib/supabase";
 
 function StatusTimeline({
   steps,
@@ -70,6 +84,50 @@ function StatusTimeline({
   );
 }
 
+function HistoryList({ rows }: { rows: ParcelHistory[] }) {
+  if (rows.length === 0) {
+    return (
+      <p className="text-sm text-foreground/50 py-4 text-center">
+        No history recorded yet.
+      </p>
+    );
+  }
+  return (
+    <ol className="relative border-l border-border ml-2 space-y-5">
+      {rows.map((h, i) => (
+        <li key={h.id} className="pl-5 relative">
+          <span
+            className={`absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full ${
+              i === 0 ? "bg-primary" : "bg-border"
+            }`}
+          />
+          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
+            <p className={`font-medium text-sm ${i === 0 ? "text-primary" : ""}`}>
+              {h.parcel_status?.lable ?? "—"}
+            </p>
+            <p className="text-xs text-foreground/50 shrink-0">
+              {new Date(h.event_time).toLocaleString("en-PK", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+          </div>
+          {h.location && (
+            <p className="flex items-center gap-1.5 text-sm text-foreground/70 mt-0.5">
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
+              {h.location}
+            </p>
+          )}
+          {h.note && <p className="text-sm text-foreground/70 mt-0.5">{h.note}</p>}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function ParcelCard({
   parcel,
   statusSteps,
@@ -77,8 +135,29 @@ function ParcelCard({
   parcel: Parcel;
   statusSteps: ParcelStatus[];
 }) {
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<ParcelHistory[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   const statusLabel = parcel.parcel_status?.lable ?? String(parcel.status_id);
   const freightLabel = parcel.feight_type?.lable ?? String(parcel.freight_type_id);
+
+  const toggleHistory = async () => {
+    const next = !showHistory;
+    setShowHistory(next);
+    if (next && !historyLoaded) {
+      setHistoryLoading(true);
+      const { data } = await supabase
+        .from("parcel_history")
+        .select("*, parcel_status(*)")
+        .eq("parcel_id", parcel.id)
+        .order("event_time", { ascending: false });
+      setHistory((data ?? []) as ParcelHistory[]);
+      setHistoryLoaded(true);
+      setHistoryLoading(false);
+    }
+  };
 
   return (
     <div className="border border-border rounded-2xl bg-card overflow-hidden">
@@ -158,6 +237,31 @@ function ParcelCard({
 
         {/* Status timeline using DB labels */}
         <StatusTimeline steps={statusSteps} currentStatusId={parcel.status_id} />
+
+        {/* Package history toggle */}
+        <button
+          type="button"
+          onClick={() => void toggleHistory()}
+          className="w-full flex items-center justify-center gap-2 border border-border hover:border-primary/40 hover:text-primary transition-colors rounded-xl py-2.5 text-sm font-medium text-foreground/70"
+        >
+          {showHistory ? "Hide history" : "Show history"}
+          <ChevronDown
+            className={`h-4 w-4 transition-transform ${showHistory ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {showHistory && (
+          <div>
+            <p className="text-xs text-foreground/50 mb-4">Package history</p>
+            {historyLoading ? (
+              <p className="text-sm text-foreground/50 py-4 text-center">
+                Loading history…
+              </p>
+            ) : (
+              <HistoryList rows={history} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

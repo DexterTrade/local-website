@@ -48,3 +48,14 @@ export type Parcel = {
   parcel_status?: ParcelStatus;
   feight_type?: FreightType;
 };
+
+export type ParcelHistory = {
+  id: number;
+  parcel_id: string;
+  status_id: number;
+  location: string | null;
+  note: string | null;
+  event_time: string;
+  created_at: string;
+  parcel_status?: ParcelStatus;
+};

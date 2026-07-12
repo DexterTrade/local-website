@@ -53,6 +53,7 @@ All types are in `lib/supabase.ts`. The shared singleton client is `export const
 |---|---|---|
 | `countries` | ✅ (all rows) | ✅ |
 | `parcel` | ✅ (all rows) | ✅ |
+| `parcel_history` | ✅ | ✅ |
 | `parcel_status` | ✅ | — |
 | `feight_type` | ✅ | — |
 
@@ -66,6 +67,8 @@ All types are in `lib/supabase.ts`. The shared singleton client is `export const
 - `id`: UUID (used as customer-facing tracking ID).
 - `status_id` → FK to `parcel_status(id)`, `freight_type_id` → FK to `feight_type(id)`.
 - Note the typo in the DB: the join relation is `feight_type` (not `freight_type`). The joined field on `Parcel` type is `parcel.feight_type`.
+
+**`parcel_history`** — dated status trail (UPS-style). One row per event: `status_id`, `event_time`, optional `location` and `note`. Shown under "Show history" on `/track`, newest first. Maintained from the admin panel's per-parcel History dialog; creating a parcel or changing its status in the edit form also appends an entry. Adding a history entry whose `event_time` is the newest also updates `parcel.status_id` (the parcel's current status always mirrors its newest history entry). Table DDL + RLS + backfill live in `supabase/parcel_history.sql`.
 
 **`parcel_status`** — lookup table. `sort_order` defines the visual progression order in the tracking timeline. Add/reorder rows here to change the timeline on `/track`.
 

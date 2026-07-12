@@ -4,7 +4,21 @@ import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "reac
 import { Copy, Check, LogOut } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { supabase, type Country, type FreightType, type Parcel, type ParcelStatus } from "@/lib/supabase";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  supabase,
+  type Country,
+  type FreightType,
+  type Parcel,
+  type ParcelHistory,
+  type ParcelStatus,
+} from "@/lib/supabase";
 import ReactFlagsSelect from "react-flags-select";
 import ReactCountryFlag from "react-country-flag";
 
@@ -31,6 +45,18 @@ const EMPTY_ORDER = {
   freight_type_id: "",
   estimated_delivery: "",
   duty_added: false,
+};
+
+const EMPTY_HISTORY = {
+  status_id: "",
+  event_time: "",
+  location: "",
+  note: "",
+};
+
+const toDatetimeLocal = (d: Date) => {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
 function IdCell({ id, copied, onCopy }: { id: string; copied: boolean; onCopy: () => void }) {
@@ -107,6 +133,13 @@ export default function AdminPage() {
   const [orderForm, setOrderForm] = useState(EMPTY_ORDER);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Parcel history state
+  const [historyParcel, setHistoryParcel] = useState<Parcel | null>(null);
+  const [historyRows, setHistoryRows] = useState<ParcelHistory[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyForm, setHistoryForm] = useState(EMPTY_HISTORY);
+  const [editingHistoryId, setEditingHistoryId] = useState<number | null>(null);
 
   // Order filters
   const [filterName, setFilterName] = useState("");
@@ -431,13 +464,14 @@ export default function AdminPage() {
     setError("");
     setMessage("");
     try {
+      const statusId = Number(orderForm.status_id);
       const payload = {
         sender_name: orderForm.sender_name.trim(),
         sender_number: orderForm.sender_number.trim(),
         receiver_name: orderForm.receiver_name.trim(),
         receiver_number: orderForm.receiver_number.trim(),
         weight: orderForm.weight.trim(),
-        status_id: Number(orderForm.status_id),
+        status_id: statusId,
         freight_type_id: Number(orderForm.freight_type_id),
         estimated_delivery: orderForm.estimated_delivery || null,
         duty_added: orderForm.duty_added,
@@ -449,10 +483,27 @@ export default function AdminPage() {
           .update({ ...payload, updated_at: new Date().toISOString() })
           .eq("id", editingId);
         if (err) throw new Error(err.message);
+        // Log the status change so it shows up in the package history
+        const prev = parcels.find((p) => p.id === editingId);
+        if (prev && prev.status_id !== statusId) {
+          await supabase
+            .from("parcel_history")
+            .insert({ parcel_id: editingId, status_id: statusId });
+        }
         setMessage("Order updated.");
       } else {
-        const { error: err } = await supabase.from("parcel").insert(payload);
+        const { data: created, error: err } = await supabase
+          .from("parcel")
+          .insert(payload)
+          .select("id")
+          .single();
         if (err) throw new Error(err.message);
+        // First history entry: the booking itself
+        if (created) {
+          await supabase
+            .from("parcel_history")
+            .insert({ parcel_id: created.id, status_id: statusId });
+        }
         setMessage("Order created.");
       }
 
@@ -480,6 +531,138 @@ export default function AdminPage() {
       setError(err instanceof Error ? err.message : "Failed to delete order");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ── Parcel history ────────────────────────────────────────────────────────
+  const loadHistory = async (parcelId: string): Promise<ParcelHistory[]> => {
+    setHistoryLoading(true);
+    try {
+      const { data, error: err } = await supabase
+        .from("parcel_history")
+        .select("*, parcel_status(*)")
+        .eq("parcel_id", parcelId)
+        .order("event_time", { ascending: false });
+      if (err) throw new Error(err.message);
+      const rows = (data ?? []) as ParcelHistory[];
+      setHistoryRows(rows);
+      return rows;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load history");
+      return [];
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // The parcel's current status always mirrors its newest history entry
+  const syncStatusFromHistory = async (parcelId: string, rows: ParcelHistory[]) => {
+    const newest = rows[0];
+    if (!newest) return;
+    const current = parcels.find((p) => p.id === parcelId);
+    if (current && current.status_id === newest.status_id) return;
+    await supabase
+      .from("parcel")
+      .update({ status_id: newest.status_id, updated_at: new Date().toISOString() })
+      .eq("id", parcelId);
+    setParcels((prev) =>
+      prev.map((p) =>
+        p.id === parcelId
+          ? {
+              ...p,
+              status_id: newest.status_id,
+              parcel_status: statuses.find((s) => s.id === newest.status_id),
+            }
+          : p,
+      ),
+    );
+    setHistoryParcel((prev) =>
+      prev && prev.id === parcelId ? { ...prev, status_id: newest.status_id } : prev,
+    );
+  };
+
+  const resetHistoryForm = (p: Parcel | null) => {
+    setEditingHistoryId(null);
+    setHistoryForm({
+      ...EMPTY_HISTORY,
+      status_id: p ? String(p.status_id) : "",
+      event_time: toDatetimeLocal(new Date()),
+    });
+  };
+
+  const openHistory = (p: Parcel) => {
+    setHistoryParcel(p);
+    setHistoryRows([]);
+    resetHistoryForm(p);
+    setShowForm(false);
+    setEditingId(null);
+    setError("");
+    setMessage("");
+    void loadHistory(p.id);
+  };
+
+  const openEditHistory = (h: ParcelHistory) => {
+    setEditingHistoryId(h.id);
+    setHistoryForm({
+      status_id: String(h.status_id),
+      event_time: toDatetimeLocal(new Date(h.event_time)),
+      location: h.location ?? "",
+      note: h.note ?? "",
+    });
+    setError("");
+  };
+
+  const submitHistory = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!historyParcel) return;
+    if (!historyForm.status_id || !historyForm.event_time) return;
+    setHistoryLoading(true);
+    setError("");
+    try {
+      const entry = {
+        status_id: Number(historyForm.status_id),
+        event_time: new Date(historyForm.event_time).toISOString(),
+        location: historyForm.location.trim() || null,
+        note: historyForm.note.trim() || null,
+      };
+      if (editingHistoryId) {
+        const { error: err } = await supabase
+          .from("parcel_history")
+          .update(entry)
+          .eq("id", editingHistoryId);
+        if (err) throw new Error(err.message);
+        setMessage("History entry updated.");
+      } else {
+        const { error: err } = await supabase
+          .from("parcel_history")
+          .insert({ parcel_id: historyParcel.id, ...entry });
+        if (err) throw new Error(err.message);
+        setMessage("History entry added.");
+      }
+      resetHistoryForm(historyParcel);
+      const rows = await loadHistory(historyParcel.id);
+      await syncStatusFromHistory(historyParcel.id, rows);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save history entry");
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const deleteHistory = async (id: number) => {
+    if (!historyParcel) return;
+    if (!window.confirm("Delete this history entry?")) return;
+    setHistoryLoading(true);
+    try {
+      const { error: err } = await supabase.from("parcel_history").delete().eq("id", id);
+      if (err) throw new Error(err.message);
+      if (editingHistoryId === id) resetHistoryForm(historyParcel);
+      const rows = await loadHistory(historyParcel.id);
+      await syncStatusFromHistory(historyParcel.id, rows);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete history entry");
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -814,6 +997,182 @@ export default function AdminPage() {
             {/* ── Orders Tab ── */}
             {activeTab === "orders" && (
               <div>
+                {/* Package history dialog */}
+                <Dialog
+                  open={!!historyParcel}
+                  onOpenChange={(open) => {
+                    if (!open) setHistoryParcel(null);
+                  }}
+                >
+                  <DialogContent className="sm:max-w-3xl">
+                    <DialogHeader>
+                      <DialogTitle>Package History</DialogTitle>
+                      <DialogDescription className="font-mono text-xs break-all">
+                        {historyParcel?.id} · {historyParcel?.sender_name} →{" "}
+                        {historyParcel?.receiver_name}
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <form
+                      onSubmit={submitHistory}
+                      className={`grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 p-4 border rounded-xl bg-card ${
+                        editingHistoryId ? "border-primary/40" : "border-border"
+                      }`}
+                    >
+                      <p className="sm:col-span-2 text-xs font-medium text-foreground/60 uppercase tracking-wide">
+                        {editingHistoryId ? "Edit entry" : "Add entry"}
+                      </p>
+                      {field(
+                        "Status *",
+                        <select
+                          value={historyForm.status_id}
+                          onChange={(e) =>
+                            setHistoryForm((f) => ({ ...f, status_id: e.target.value }))
+                          }
+                          className={selectCls}
+                          required
+                        >
+                          <option value="">Select status</option>
+                          {statuses.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.lable}
+                            </option>
+                          ))}
+                        </select>,
+                      )}
+                      {field(
+                        "Date & Time *",
+                        <input
+                          type="datetime-local"
+                          value={historyForm.event_time}
+                          onChange={(e) =>
+                            setHistoryForm((f) => ({ ...f, event_time: e.target.value }))
+                          }
+                          className={inputCls}
+                          required
+                        />,
+                      )}
+                      {field(
+                        "Location",
+                        <input
+                          type="text"
+                          placeholder="e.g. Karachi Port"
+                          value={historyForm.location}
+                          onChange={(e) =>
+                            setHistoryForm((f) => ({ ...f, location: e.target.value }))
+                          }
+                          className={inputCls}
+                        />,
+                      )}
+                      {field(
+                        "Note",
+                        <input
+                          type="text"
+                          placeholder="Optional"
+                          value={historyForm.note}
+                          onChange={(e) =>
+                            setHistoryForm((f) => ({ ...f, note: e.target.value }))
+                          }
+                          className={inputCls}
+                        />,
+                      )}
+                      <div className="sm:col-span-2 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                        {editingHistoryId && (
+                          <button
+                            type="button"
+                            onClick={() => resetHistoryForm(historyParcel)}
+                            className="h-9 px-4 rounded-md border border-border text-sm hover:bg-muted"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={historyLoading}
+                          className="h-9 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-60"
+                        >
+                          {editingHistoryId ? "Save Entry" : "+ Add Entry"}
+                        </button>
+                      </div>
+                    </form>
+
+                    {historyLoading && historyRows.length === 0 ? (
+                      <p className="text-sm text-foreground/60 py-6 text-center">
+                        Loading history…
+                      </p>
+                    ) : historyRows.length === 0 ? (
+                      <p className="text-sm text-foreground/60 py-6 text-center">
+                        No history entries yet.
+                      </p>
+                    ) : (
+                      <div className="rounded-xl border border-border overflow-hidden">
+                        <div className="overflow-auto max-h-[50vh]">
+                          <table className="w-full text-sm">
+                            <thead className="bg-muted sticky top-0">
+                              <tr>
+                                <th className="text-left px-4 py-3 whitespace-nowrap">Date &amp; Time</th>
+                                <th className="text-left px-4 py-3 whitespace-nowrap">Status</th>
+                                <th className="text-left px-4 py-3 whitespace-nowrap">Location</th>
+                                <th className="text-left px-4 py-3">Note</th>
+                                <th className="px-4 py-3" />
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {historyRows.map((h) => (
+                                <tr
+                                  key={h.id}
+                                  className={`border-t border-border hover:bg-muted/30 ${
+                                    editingHistoryId === h.id ? "bg-primary/5" : ""
+                                  }`}
+                                >
+                                  <td className="px-4 py-3 whitespace-nowrap text-foreground/70">
+                                    {new Date(h.event_time).toLocaleString("en-PK", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </td>
+                                  <td className="px-4 py-3 whitespace-nowrap">
+                                    <span className="inline-block rounded-full bg-primary/10 text-primary text-xs px-2 py-0.5">
+                                      {h.parcel_status?.lable ?? h.status_id}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 whitespace-nowrap">
+                                    {h.location ?? "—"}
+                                  </td>
+                                  <td className="px-4 py-3 text-foreground/70">
+                                    {h.note ?? "—"}
+                                  </td>
+                                  <td className="px-4 py-3 whitespace-nowrap">
+                                    <div className="flex gap-2 justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => openEditHistory(h)}
+                                        className="text-xs px-3 py-1 rounded-md border border-border hover:bg-muted"
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => void deleteHistory(h.id)}
+                                        className="text-xs px-3 py-1 rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10"
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </DialogContent>
+                </Dialog>
+
                 {/* New order form */}
                 {showForm ? (
                   <div className="border border-border rounded-2xl p-6 bg-card mb-6">
@@ -1096,6 +1455,13 @@ export default function AdminPage() {
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap">
                                 <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => openHistory(p)}
+                                    className="text-xs px-3 py-1 rounded-md border border-border hover:bg-muted"
+                                  >
+                                    History
+                                  </button>
                                   <button
                                     type="button"
                                     onClick={() => openEditForm(p)}
